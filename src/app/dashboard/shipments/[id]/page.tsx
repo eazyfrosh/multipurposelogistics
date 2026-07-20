@@ -54,10 +54,7 @@ function ShipmentDetail() {
   if (!shipment) return <LoadingState label="Loading shipment…" />;
 
   const carrier = getCarrier(shipment.carrierCode);
-  const publicUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/track/${shipment.id}?token=${shipment.verificationToken}`
-      : "";
+  const publicUrl = typeof window !== "undefined" ? `${window.location.origin}/track/${shipment.id}` : "";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">

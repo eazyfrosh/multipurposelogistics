@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, LayoutDashboard, ShieldCheck, LogOut, User, ChevronDown, PackageSearch } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { NotificationBell } from "@/components/layout/notification-bell";
+import { GlobalSearch } from "@/components/layout/global-search";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { useAuth } from "@/context/auth-context";
@@ -55,6 +57,8 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <GlobalSearch />
+          <NotificationBell />
           <ThemeToggle />
           {user ? (
             <div className="relative" ref={menuRef}>

@@ -12,18 +12,8 @@ import { TableRowSkeleton } from "@/components/ui/skeleton";
 import { getAllNotifications, pushNotification } from "@/lib/services/notifications";
 import { getAllUsers } from "@/lib/services/users";
 import { formatDateTime } from "@/lib/utils";
-import type { AppNotification, NotificationType, UserProfile } from "@/types";
-
-const TYPE_TONE: Record<NotificationType, "brand" | "green" | "amber" | "red" | "neutral"> = {
-  shipment_created: "brand",
-  picked_up: "brand",
-  in_transit: "brand",
-  delayed: "amber",
-  out_for_delivery: "brand",
-  delivered: "green",
-  returned: "red",
-  system: "neutral",
-};
+import { NOTIFICATION_TONE as TYPE_TONE } from "@/lib/notification-ui";
+import type { AppNotification, UserProfile } from "@/types";
 
 export default function AdminNotificationsPage() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);

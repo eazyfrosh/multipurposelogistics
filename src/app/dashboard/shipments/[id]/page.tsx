@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Pencil, Link2, Copy, MapPin, Weight, Ruler, ShieldCheck } from "lucide-react";
+import { Pencil, Link2, Copy, MapPin, Weight, Ruler, ShieldCheck, FileText } from "lucide-react";
 import { StatusBadge, statusProgressPercent } from "@/components/shared/status-badge";
 import { TrackingTimeline } from "@/components/shared/tracking-timeline";
 import { QRCodeImage } from "@/components/shared/qr-code";
@@ -210,6 +210,34 @@ function ShipmentDetail() {
                 <ShieldCheck size={14} className="text-foreground/40" />{" "}
                 {shipment.insured ? "Insured" : "Not insured"}
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Documents</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-2">
+              <Link href={`/dashboard/shipments/${shipment.id}/label`}>
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <FileText size={14} /> Shipping label
+                </Button>
+              </Link>
+              <Link href={`/dashboard/shipments/${shipment.id}/invoice`}>
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <FileText size={14} /> Invoice
+                </Button>
+              </Link>
+              <Link href={`/dashboard/shipments/${shipment.id}/receipt`}>
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <FileText size={14} /> Receipt
+                </Button>
+              </Link>
+              <Link href={`/track/${shipment.id}`} target="_blank">
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <FileText size={14} /> Tracking summary
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

@@ -12,7 +12,6 @@ import {
   Plus,
   PackageSearch,
 } from "lucide-react";
-import { ProtectedRoute } from "@/components/shared/protected-route";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { MonthlyShipmentsChart } from "@/components/dashboard/monthly-shipments-chart";
 import { DeliveryStatusChart } from "@/components/dashboard/delivery-status-chart";
@@ -167,9 +166,5 @@ function DashboardHome() {
 }
 
 export default function DashboardPage() {
-  return (
-    <ProtectedRoute>
-      <DashboardHome />
-    </ProtectedRoute>
-  );
+  return <DashboardHome />;
 }

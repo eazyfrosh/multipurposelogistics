@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ProtectedRoute } from "@/components/shared/protected-route";
 import { ShipmentForm } from "@/components/shipments/shipment-form";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAuth } from "@/context/auth-context";
@@ -35,9 +34,5 @@ function EditShipmentInner() {
 }
 
 export default function EditShipmentPage() {
-  return (
-    <ProtectedRoute>
-      <EditShipmentInner />
-    </ProtectedRoute>
-  );
+  return <EditShipmentInner />;
 }

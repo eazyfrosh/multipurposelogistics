@@ -1,6 +1,11 @@
-import { upsert } from "@/lib/services/store";
+import { getAll, upsert } from "@/lib/services/store";
 import { generateId } from "@/lib/utils";
 import type { ActivityAction, ActivityLog } from "@/types";
+
+export async function getAllActivity() {
+  const items = await getAll<ActivityLog>("activity_logs");
+  return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
 
 export async function logActivity(
   userId: string,

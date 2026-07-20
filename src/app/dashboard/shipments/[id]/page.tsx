@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Pencil, Link2, Copy, MapPin, Weight, Ruler, ShieldCheck } from "lucide-react";
-import { ProtectedRoute } from "@/components/shared/protected-route";
 import { StatusBadge, statusProgressPercent } from "@/components/shared/status-badge";
 import { TrackingTimeline } from "@/components/shared/tracking-timeline";
 import { QRCodeImage } from "@/components/shared/qr-code";
@@ -220,9 +219,5 @@ function ShipmentDetail() {
 }
 
 export default function ShipmentDetailPage() {
-  return (
-    <ProtectedRoute>
-      <ShipmentDetail />
-    </ProtectedRoute>
-  );
+  return <ShipmentDetail />;
 }

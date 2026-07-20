@@ -1,0 +1,121 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+    // A write to a public mirror/lookup doc (below) is only trusted if it's
+    // tied to a shipment the requester actually owns — otherwise a signed-in
+    // user could tamper with another customer's public tracking data even
+    // though they can't touch the private `shipments` doc itself.
+    function ownsShipment(shipmentId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/shipments/$(shipmentId)) &&
+        get(/databases/$(database)/documents/shipments/$(shipmentId)).data.userId == request.auth.uid;
+    }
+
+    // Profiles: owners read/write their own; admins read/write any (needed
+    // for /admin/users role changes and for the isAdmin() lookup above).
+    // A non-admin can never grant themselves the admin role.
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.role == "user";
+      allow update: if isAdmin() ||
+        (isOwner(userId) && request.resource.data.role == resource.data.role);
+      allow delete: if isAdmin();
+    }
+
+    // Shipments hold full sender/receiver contact details (email, phone,
+    // address) and are never publicly readable or listable. The
+    // shipment_tracking mirror + lookup collections below exist specifically
+    // so the public /track pages never need access to this collection.
+    match /shipments/{shipmentId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Tracking events: readable by anyone who already knows the shipmentId
+    // (matches the public tracking page, which shows the same information).
+    // Only admins may add/edit/remove checkpoints.
+    match /tracking_events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Public mirror of the non-sensitive shipment fields shown on
+    // /track/[id] — name/city/country only, never email/phone/full address.
+    // Keyed by the same id as the shipment; get-only, never listable, so it
+    // can't be scanned. Written only by the app's own create/update flow.
+    match /shipment_tracking/{shipmentId} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isAdmin() || ownsShipment(shipmentId);
+    }
+
+    // Capability lookups for the /track search form: tracking number,
+    // shipment number, and reference number each resolve to a shipmentId.
+    // Get-only by the exact number — never listable — so these can't be
+    // enumerated to discover other customers' shipments.
+    match /tracking_lookup/{trackingNumber} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isAdmin() || ownsShipment(request.resource.data.shipmentId);
+    }
+    match /shipment_lookup/{shipmentNumber} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isAdmin() || ownsShipment(request.resource.data.shipmentId);
+    }
+    match /reference_lookup/{referenceNumber} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isAdmin() || ownsShipment(request.resource.data.shipmentId);
+    }
+
+    // Notifications: recipients read/mark their own; admins can read and
+    // send to anyone (admin/notifications, and the tracking-event editor's
+    // "generate notification" option).
+    match /notifications/{notificationId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isOwner(request.resource.data.userId) || isAdmin();
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Support tickets: the requester and admins can read/update (replies,
+    // status changes); only the requester can open a new ticket.
+    match /support_tickets/{ticketId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Carrier catalog: any signed-in user can view it (used across the
+    // shipment form and admin panel); only admins can enable/disable a
+    // carrier.
+    match /carrier_settings/{carrierCode} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Activity log: every signed-in user can append an entry for their own
+    // actions (shipment created, ticket opened, etc.), but the audit trail
+    // itself is only readable by admins.
+    match /activity_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if false;
+    }
+  }
+}

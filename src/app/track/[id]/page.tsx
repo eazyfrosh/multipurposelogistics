@@ -13,14 +13,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getShipment, getTrackingEvents } from "@/lib/services/shipments";
+import { getPublicShipmentSummary, getTrackingEvents, type PublicShipmentSummary } from "@/lib/services/shipments";
 import { getCarrier } from "@/lib/data/carriers";
 import { formatDateLong } from "@/lib/utils";
-import { SERVICE_LABELS, STATUS_LABELS, type Shipment, type TrackingEvent } from "@/types";
+import { SERVICE_LABELS, STATUS_LABELS, type TrackingEvent } from "@/types";
 
 function TrackingResult() {
   const params = useParams<{ id: string }>();
-  const [shipment, setShipment] = useState<Shipment | null | undefined>(undefined);
+  const [shipment, setShipment] = useState<PublicShipmentSummary | null | undefined>(undefined);
   const [events, setEvents] = useState<TrackingEvent[]>([]);
   const [publicUrl, setPublicUrl] = useState("");
 
@@ -29,7 +29,7 @@ function TrackingResult() {
   }, []);
 
   useEffect(() => {
-    getShipment(params.id).then(async (s) => {
+    getPublicShipmentSummary(params.id).then(async (s) => {
       setShipment(s);
       if (s) setEvents(await getTrackingEvents(s.id));
     });
@@ -135,7 +135,7 @@ function TrackingResult() {
               </div>
               <div className="flex items-center gap-1.5 pt-1">
                 <Weight size={13} className="text-foreground/40" />
-                <span>{shipment.package.weightKg} kg · {STATUS_LABELS[shipment.status]}</span>
+                <span>{shipment.weightKg} kg · {STATUS_LABELS[shipment.status]}</span>
               </div>
             </CardContent>
           </Card>

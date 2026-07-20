@@ -1,0 +1,151 @@
+# TrackNova — Multi-Carrier Logistics Platform (Demo)
+
+TrackNova is a premium, portfolio/demo logistics and shipment-tracking platform
+built to look and feel like a production multi-carrier aggregator (ShipStation
+/ EasyPost / Shippo / AfterShip-style). **It is a fictional platform and is not
+affiliated with, endorsed by, or connected to DHL, FedEx, UPS, USPS, or any
+other real carrier.** Carrier names are shown only as illustrative "supported
+integrations" using generic icons — never official logos or trademarks — and
+every shipment, tracking event, and notification is simulated.
+
+## Tech stack
+
+- Next.js 15 (App Router) + React 19 + TypeScript
+- Tailwind CSS v4
+- Firebase Authentication + Firestore (optional — see below)
+- Framer Motion, React Hook Form + Zod, Recharts, `qrcode`, `jsbarcode`, `xlsx`, `sonner`
+
+## Running locally
+
+```bash
+npm install
+npm run dev
+```
+
+Open http://localhost:3000.
+
+## Demo mode vs. real Firebase
+
+The app works out of the box with **zero configuration** using a local-demo
+auth mode backed by `localStorage`: sign up, log in, create shipments, and
+manage the whole platform without any Firebase project.
+
+A seeded demo admin account is created automatically in this mode:
+
+- **Email:** `admin@tracknova.demo`
+- **Password:** `admin123`
+
+To use a real Firebase project instead (Authentication + Firestore), create a
+`.env.local` with:
+
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+```
+
+Once all of these are present, the app automatically switches to real Firebase
+Auth + Firestore (see `src/lib/firebase/client.ts`). Data reads/writes go
+through `src/lib/services/store.ts`, a thin layer that picks Firestore or
+`localStorage` depending on whether Firebase is configured, so the rest of the
+app doesn't need to know which backend is active. In real-Firebase mode, the
+first admin user must have their `role` field set to `"admin"` directly in the
+`users` Firestore collection — there's no self-serve admin signup (the
+Firestore rules only ever let a new account create itself with `role: "user"`).
+
+### Firestore security rules
+
+Deploy `firestore.rules` (Firebase Console → Firestore Database → Rules, or
+`firebase deploy --only firestore:rules` with the CLI) before using real
+Firebase mode. Highlights:
+
+- `shipments` (full sender/receiver contact details) is owner/admin-only —
+  never publicly readable, gettable, or listable.
+- The public `/track` pages never touch that collection. Instead, every
+  shipment write also syncs a **public mirror** (`shipment_tracking/{id}`,
+  name/city/country only — no email/phone/address) and three narrow
+  **capability lookups** (`tracking_lookup`, `shipment_lookup`,
+  `reference_lookup`, each keyed by the exact number they resolve). All four
+  are `get`-only by exact key and never listable, so an anonymous visitor can
+  resolve a tracking/shipment/reference number to a shipment without ever
+  being able to enumerate or browse other customers' shipments.
+- `tracking_events` are readable by anyone who already has a shipmentId
+  (matches what the public tracking page already shows); only admins can
+  write them.
+- Every other collection (`users`, `notifications`, `support_tickets`,
+  `carrier_settings`, `activity_logs`) is scoped to its owner and/or admins.
+
+## Feature overview
+
+- **Landing page** — animated gradient hero with a tracking-number search,
+  animated stat counters, a 21-carrier "supported integrations" grid (generic
+  icons + a clear non-affiliation disclaimer), feature grid, "how it works",
+  testimonials, and an FAQ accordion.
+- **Auth** — register/login/forgot-password/verify-email (Firebase or
+  simulated in demo mode), protected dashboard/admin routes.
+- **User dashboard** (`/dashboard`) — stat cards (total/delivered/in-transit
+  /pending/cancelled/revenue), monthly-shipments bar chart, delivery-status
+  donut, carrier-distribution chart, recent activity feed.
+- **Shipment management** (`/dashboard/shipments`) — full create/edit form
+  (sender, receiver, package, service, cost, insurance), auto-generated
+  carrier-prefixed tracking numbers (e.g. `FDX482252259`, `DHL483927492`) and
+  shipment numbers, a detail page with QR code + CODE128 barcode + tracking
+  link, search/filter/pagination, row-selection bulk status update, CSV/Excel
+  export, and CSV bulk import with a downloadable template.
+- **Public tracking** (`/track`) — no-sign-in lookup by tracking, reference,
+  or shipment number; a result page with current status, progress bar, an
+  illustrative checkpoint route visualization (explicitly not live GPS), the
+  full timeline, a self-referential QR code, and print/download-PDF.
+- **Documents** — shipping label (barcode + QR), invoice, and receipt, each a
+  print-ready page (browser print → PDF); the tracking page doubles as the
+  printable tracking summary.
+- **Admin panel** (`/admin`, admin role required) — platform stats, full
+  management of users (role changes), shipments, carriers (enable/disable),
+  notifications (view + manually send), support tickets (reply, status), a
+  tracking-event editor (add checkpoints, change status/location/delivery
+  date, notes, proof-of-delivery upload, mark delivered, generate a customer
+  notification), reports with CSV/Excel export, and an activity-log audit
+  trail.
+- **Notifications** — header bell with unread badge, a full notifications
+  page with a simulated email preview per notification, and per-type
+  notification preferences on the profile page.
+- **Profile** — Profile / Security (password-reset email) / Notifications /
+  API Keys (demo) / Billing (demo) tabs.
+- **Global search** (header icon or Cmd/Ctrl+K) — searches tracking #,
+  shipment #, reference #, sender/receiver name, and carrier; scoped to the
+  signed-in user's own shipments, or all shipments for admins.
+- **Extras** — dark/light mode, skeleton loaders, empty states, toast
+  notifications, mobile-first responsive layout throughout.
+
+## Project structure
+
+```
+src/
+  app/            Next.js App Router routes (marketing, auth, dashboard, admin, track)
+  components/     UI components grouped by feature area
+  context/        Auth context (Firebase/local-demo)
+  lib/data/       Carrier catalog, tracking-number generator, countries
+  lib/services/   Firestore/localStorage data access (shipments, users, notifications, tickets, carriers, activity)
+  lib/validation/ Zod schemas
+  lib/utils/      CSV/Excel export, CSV bulk-import parser
+  types/          Shared TypeScript types
+```
+
+## Database structure (collections)
+
+`users`, `shipments`, `shipment_tracking`, `tracking_lookup`,
+`shipment_lookup`, `reference_lookup`, `tracking_events`, `notifications`,
+`support_tickets`, `carrier_settings`, `activity_logs`.
+
+## Build
+
+```bash
+npm run build
+npm run lint
+```
+
+Deploys cleanly to Vercel with no required environment variables (demo mode is
+the default), and picks up real Firebase config automatically if provided.

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { PackageSearch, ArrowRight, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/loading-state";
-import { findShipment } from "@/lib/services/shipments";
+import { findShipmentPublic } from "@/lib/services/shipments";
 
 function TrackSearchInner() {
   const router = useRouter();
@@ -19,7 +19,7 @@ function TrackSearchInner() {
     if (!q) return;
     setSearching(true);
     setNotFound(false);
-    const result = await findShipment(q);
+    const result = await findShipmentPublic(q);
     if (result) {
       router.push(`/track/${result.id}`);
       return;

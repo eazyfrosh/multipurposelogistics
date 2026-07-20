@@ -1,4 +1,5 @@
 import { getAll, getOne, queryByField, remove, upsert } from "@/lib/services/store";
+import { isFirebaseConfigured } from "@/lib/firebase/client";
 import { generateId, generateVerificationToken } from "@/lib/utils";
 import { generateShipmentNumber, generateTrackingNumber } from "@/lib/data/tracking-number";
 import { logActivity } from "@/lib/services/activity";
@@ -7,6 +8,55 @@ import type { ContactInfo, PackageInfo, ServiceType, Shipment, ShipmentStatus, T
 
 const SHIPMENTS = "shipments";
 const EVENTS = "tracking_events";
+const PUBLIC_MIRROR = "shipment_tracking";
+const TRACKING_LOOKUP = "tracking_lookup";
+const SHIPMENT_LOOKUP = "shipment_lookup";
+const REFERENCE_LOOKUP = "reference_lookup";
+
+/**
+ * The public-safe subset of a shipment, mirrored into a separate collection
+ * so /track/[id] never needs read access to the private `shipments`
+ * collection (which holds full sender/receiver emails, phones, addresses).
+ */
+export interface PublicShipmentSummary {
+  id: string;
+  trackingNumber: string;
+  shipmentNumber: string;
+  referenceNumber?: string;
+  carrierCode: string;
+  status: ShipmentStatus;
+  serviceType: ServiceType;
+  estimatedDeliveryDate: string;
+  weightKg: number;
+  sender: { name: string; city: string; country: string };
+  receiver: { name: string; city: string; country: string };
+}
+
+function toPublicSummary(s: Shipment): PublicShipmentSummary {
+  return {
+    id: s.id,
+    trackingNumber: s.trackingNumber,
+    shipmentNumber: s.shipmentNumber,
+    referenceNumber: s.referenceNumber,
+    carrierCode: s.carrierCode,
+    status: s.status,
+    serviceType: s.serviceType,
+    estimatedDeliveryDate: s.estimatedDeliveryDate,
+    weightKg: s.package.weightKg,
+    sender: { name: s.sender.name, city: s.sender.city, country: s.sender.country },
+    receiver: { name: s.receiver.name, city: s.receiver.city, country: s.receiver.country },
+  };
+}
+
+/** Keeps the public mirror + capability-lookup docs in sync with a shipment. */
+async function syncPublicMirror(shipment: Shipment) {
+  await upsert(PUBLIC_MIRROR, toPublicSummary(shipment));
+  await upsert(TRACKING_LOOKUP, { id: shipment.trackingNumber, shipmentId: shipment.id });
+  await upsert(SHIPMENT_LOOKUP, { id: shipment.shipmentNumber, shipmentId: shipment.id });
+  if (shipment.referenceNumber) {
+    await upsert(REFERENCE_LOOKUP, { id: shipment.referenceNumber, shipmentId: shipment.id });
+  }
+}
 
 export interface CreateShipmentInput {
   userId: string;
@@ -48,6 +98,7 @@ export async function createShipment(input: CreateShipmentInput, actorName: stri
     updatedAt: now,
   };
   await upsert(SHIPMENTS, shipment);
+  await syncPublicMirror(shipment);
   await addTrackingEvent(shipment.id, {
     status: "pending",
     location: input.sender.city + ", " + input.sender.country,
@@ -90,9 +141,41 @@ export async function findShipment(query: string): Promise<Shipment | null> {
   );
 }
 
+/**
+ * Public, no-sign-in lookup for the /track search page. In demo mode this
+ * scans local shipments directly (no security boundary there). Against real
+ * Firestore it only ever reads the narrow, get-by-exact-key lookup mirrors —
+ * never the private `shipments` collection — so an anonymous visitor can
+ * resolve a tracking/shipment/reference number to an id without ever being
+ * able to list or browse other people's shipments.
+ */
+export async function findShipmentPublic(query: string): Promise<{ id: string } | null> {
+  const q = query.trim();
+  if (!q) return null;
+
+  if (!isFirebaseConfigured) {
+    const match = await findShipment(q);
+    return match ? { id: match.id } : null;
+  }
+
+  const candidates = Array.from(new Set([q, q.toUpperCase()]));
+  for (const collection of [TRACKING_LOOKUP, SHIPMENT_LOOKUP, REFERENCE_LOOKUP]) {
+    for (const value of candidates) {
+      const hit = await getOne<{ id: string; shipmentId: string }>(collection, value);
+      if (hit) return { id: hit.shipmentId };
+    }
+  }
+  return null;
+}
+
+export async function getPublicShipmentSummary(id: string) {
+  return getOne<PublicShipmentSummary>(PUBLIC_MIRROR, id);
+}
+
 export async function updateShipment(shipment: Shipment) {
   const updated = { ...shipment, updatedAt: new Date().toISOString() };
   await upsert(SHIPMENTS, updated);
+  await syncPublicMirror(updated);
   return updated;
 }
 

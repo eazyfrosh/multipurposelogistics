@@ -20,7 +20,7 @@ const FEATURES = [
   { icon: QrCode, title: "QR verification", description: "Every shipment gets a scannable QR code that opens its public tracking page." },
   { icon: Mail, title: "Email notifications", description: "Automated notification templates for every stage of the delivery journey." },
   { icon: History, title: "Shipment history", description: "Full audit trail of every shipment, event, and status change ever recorded." },
-  { icon: Globe2, title: "Multiple carriers", description: "21 carrier integrations with carrier-specific tracking number formats." },
+  { icon: Globe2, title: "Multiple carriers", description: "Supported carrier integrations with carrier-specific tracking number formats." },
   { icon: ShieldCheck, title: "Secure dashboard", description: "Role-based access, Firebase authentication, and per-user data isolation." },
   { icon: UsersRound, title: "Admin management", description: "A complete back office for users, shipments, carriers, and support." },
 ];

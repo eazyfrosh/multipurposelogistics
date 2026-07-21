@@ -33,7 +33,7 @@ export function Hero() {
             <br className="hidden sm:block" /> one dashboard.
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base text-white/70 sm:text-lg">
-            Create, track, and manage shipments across 21 supported carrier integrations —
+            Create, track, and manage shipments across supported carrier integrations —
             with live status timelines, QR verification, and enterprise-grade reporting.
           </p>
         </motion.div>

@@ -81,8 +81,8 @@ Firebase mode. Highlights:
 ## Feature overview
 
 - **Landing page** — animated gradient hero with a tracking-number search,
-  animated stat counters, a 21-carrier "supported integrations" grid (generic
-  icons + a clear non-affiliation disclaimer), feature grid, "how it works",
+  animated stat counters, a "supported integrations" grid (generic logo-mark
+  badges + a clear non-affiliation disclaimer), feature grid, "how it works",
   testimonials, and an FAQ accordion.
 - **Auth** — register/login/forgot-password/verify-email (Firebase or
   simulated in demo mode), protected dashboard/admin routes.

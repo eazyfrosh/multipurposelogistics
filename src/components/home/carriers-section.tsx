@@ -9,12 +9,12 @@ export function CarriersSection() {
       <div className="mx-auto max-w-2xl text-center">
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Supported carrier integrations</h2>
         <p className="mt-3 text-foreground/60">
-          TrackNova aggregates tracking across 21 carrier integrations worldwide, shown here with
+          TrackNova aggregates tracking across major carrier integrations, shown here with
           generic logo marks rather than official logos.
         </p>
       </div>
 
-      <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+      <div className="mx-auto mt-10 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
         {CARRIERS.map((carrier, i) => {
           const [from, to] = carrierMonogramColors(carrier.code);
           return (
@@ -23,23 +23,23 @@ export function CarriersSection() {
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.35, delay: (i % 7) * 0.04 }}
-              className="group relative flex flex-col items-center gap-2.5 rounded-xl border border-black/8 bg-white p-4 text-center transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-white/[0.03]"
+              transition={{ duration: 0.35, delay: i * 0.06 }}
+              className="group relative flex flex-col items-center gap-3 rounded-2xl border border-black/8 bg-white p-6 text-center transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-white/[0.03]"
             >
               <div className="relative">
                 <span
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl text-sm font-bold tracking-tight text-white shadow-md"
-                  style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})`, boxShadow: `0 6px 16px -6px ${from}66` }}
+                  className="flex h-16 w-16 items-center justify-center rounded-2xl text-base font-bold tracking-tight text-white shadow-md"
+                  style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})`, boxShadow: `0 8px 20px -6px ${from}66` }}
                 >
                   {carrier.prefix}
                 </span>
-                <span className="absolute -bottom-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-black/5 text-foreground/60 dark:border-[#0b0e17] dark:bg-white/10">
-                  <carrier.icon size={10} />
+                <span className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-black/5 text-foreground/60 dark:border-[#0b0e17] dark:bg-white/10">
+                  <carrier.icon size={12} />
                 </span>
               </div>
               <div>
-                <p className="text-xs font-semibold leading-tight">{carrier.name}</p>
-                <p className="text-[11px] text-foreground/45">{carrier.region}</p>
+                <p className="text-sm font-semibold leading-tight">{carrier.name}</p>
+                <p className="text-xs text-foreground/45">{carrier.region}</p>
               </div>
             </motion.div>
           );

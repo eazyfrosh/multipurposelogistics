@@ -1,13 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ArrowRight, LayoutDashboard } from "lucide-react";
 import { TrackingSearch } from "@/components/home/tracking-search";
 import { StatsCounter } from "@/components/home/stats-counter";
-import { Button } from "@/components/ui/button";
 
 const HERO_BACKGROUND_SRC = "/hero/logistics-hero.webp";
 
@@ -55,18 +52,6 @@ export function Hero() {
           className="mx-auto mt-10 max-w-2xl"
         >
           <TrackingSearch />
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/auth/signup">
-              <Button variant="gold" size="lg">
-                Create a shipment <ArrowRight size={16} />
-              </Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="secondary" size="lg" className="bg-white/10 text-white hover:bg-white/20">
-                <LayoutDashboard size={16} /> View dashboard
-              </Button>
-            </Link>
-          </div>
         </motion.div>
 
         <StatsCounter />

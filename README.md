@@ -37,8 +37,9 @@ A seeded demo admin account is created automatically in this mode:
 - **Email:** `admin@tracknova.demo`
 - **Password:** `admin123`
 
-To use a real Firebase project instead (Authentication + Firestore), create a
-`.env.local` with:
+To use a real Firebase project instead (Authentication + Firestore + Storage),
+copy `.env.local.example` to `.env.local` and fill in your own project's
+values — never commit real credentials:
 
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=...
@@ -47,16 +48,41 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
 NEXT_PUBLIC_FIREBASE_APP_ID=...
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=...   # optional, Analytics only
 ```
 
-Once all of these are present, the app automatically switches to real Firebase
-Auth + Firestore (see `src/lib/firebase/client.ts`). Data reads/writes go
-through `src/lib/services/store.ts`, a thin layer that picks Firestore or
-`localStorage` depending on whether Firebase is configured, so the rest of the
-app doesn't need to know which backend is active. In real-Firebase mode, the
-first admin user must have their `role` field set to `"admin"` directly in the
-`users` Firestore collection — there's no self-serve admin signup (the
-Firestore rules only ever let a new account create itself with `role: "user"`).
+Once all six required `NEXT_PUBLIC_FIREBASE_*` variables are present, the app
+automatically switches to real Firebase Auth + Firestore + Storage (see
+`src/lib/firebase/client.ts`, which initializes the SDK exactly once via
+`getApps()`). Data reads/writes go through `src/lib/services/store.ts`, a thin
+layer that picks Firestore or `localStorage` depending on whether Firebase is
+configured, so the rest of the app doesn't need to know which backend is
+active. In real-Firebase mode, the first admin user must have their `role`
+field set to `"admin"` directly in the `users` Firestore collection — there's
+no self-serve admin signup (the Firestore rules only ever let a new account
+create itself with `role: "user"`).
+
+If you set some but not all of the required client variables, the app warns
+in the browser console with the exact missing variable name(s) instead of
+failing silently or half-configuring itself.
+
+### Firebase Admin SDK (server-only)
+
+`src/lib/firebase/admin.ts` provides a lazily-initialized, singleton Admin SDK
+app for any future Route Handler or Server Action that needs server-side
+Firebase access (the app currently has none — everything runs client-side
+against the Client SDK, guarded by Firestore security rules). It reads:
+
+```
+FIREBASE_PROJECT_ID=...
+FIREBASE_CLIENT_EMAIL=...
+FIREBASE_PRIVATE_KEY=...   # from the service account JSON, \n-escaped
+```
+
+Calling `getFirebaseAdminApp()` / `getAdminAuth()` / `getAdminFirestore()`
+without all three variables set throws an error naming exactly which one(s)
+are missing, rather than failing silently. The module imports `server-only`,
+so bundling it into client code is a build-time error.
 
 ### Firestore security rules
 

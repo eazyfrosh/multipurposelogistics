@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Truck, Plane, Package } from "lucide-react";
 import type { ServiceType } from "@/types";
+import { isCarrierLogoAvailable } from "@/lib/data/carrier-logos";
 
 export interface CarrierDefinition {
   code: string;
@@ -13,11 +14,19 @@ export interface CarrierDefinition {
 
 /**
  * Fictional demo platform: these are shown as "supported carrier integrations"
- * using generic icons and plain text only — no official logos or trademarks.
- * Real carrier names are referenced solely to illustrate multi-carrier
- * aggregation, in the same spirit as public rate-shopping APIs.
+ * with each carrier's logo rendered via <CarrierLogo> — no official logos or
+ * trademarks ship in this repo. Real carrier names are referenced solely to
+ * illustrate multi-carrier aggregation, in the same spirit as public
+ * rate-shopping APIs.
+ *
+ * This is the full catalog of carriers the app *knows about*. Which of these
+ * actually show up anywhere (dropdowns, landing page, filters, etc.) is
+ * filtered down to only carriers with a real logo file in public/carriers —
+ * see CARRIERS below. public/carriers is the source of truth: add a logo
+ * file + a line here, and the carrier appears everywhere on the next
+ * `npm run dev` / `npm run build`; remove the file and it disappears.
  */
-export const CARRIERS: CarrierDefinition[] = [
+const CARRIER_DEFINITIONS: CarrierDefinition[] = [
   { code: "DHL", name: "DHL", prefix: "DHL", icon: Plane, region: "Global", serviceTypes: ["express", "economy", "priority"] },
   { code: "FEDEX", name: "FedEx", prefix: "FDX", icon: Plane, region: "Global", serviceTypes: ["express", "priority", "standard"] },
   { code: "UPS", name: "UPS", prefix: "UPS", icon: Truck, region: "Global", serviceTypes: ["express", "standard", "economy"] },
@@ -40,6 +49,9 @@ export const CARRIERS: CarrierDefinition[] = [
   { code: "SWISSPOST", name: "Swiss Post", prefix: "SWP", icon: Truck, region: "Switzerland", serviceTypes: ["standard", "priority"] },
 ];
 
+/** Only carriers with an actual logo file present in public/carriers/. */
+export const CARRIERS: CarrierDefinition[] = CARRIER_DEFINITIONS.filter((c) => isCarrierLogoAvailable(c.code));
+
 export const GENERIC_CARRIER: CarrierDefinition = {
   code: "GENERIC",
   name: "TrackNova Direct",
@@ -49,6 +61,7 @@ export const GENERIC_CARRIER: CarrierDefinition = {
   serviceTypes: ["express", "economy", "priority", "standard"],
 };
 
+/** GENERIC is always available — its logo is default.svg, which always ships. */
 export const ALL_CARRIERS = [...CARRIERS, GENERIC_CARRIER];
 
 export function getCarrier(identifier: string): CarrierDefinition {
@@ -59,30 +72,6 @@ export function getCarrier(identifier: string): CarrierDefinition {
     (c) => c.code.toLowerCase() === normalized || c.name.toLowerCase() === normalized
   );
   return byNameOrCode ?? GENERIC_CARRIER;
-}
-
-/**
- * Generic "logo mark" palette for carrier badges — the same trick apps like
- * Wise or Stripe Atlas use for institutions without a usable real logo:
- * a colored monogram chip. Deliberately generic tones (no brand's actual
- * color pairing, e.g. no red+yellow, no purple+orange, no brown+gold) cycled
- * by a simple hash so the assignment is arbitrary, not brand-mimicking.
- */
-const MONOGRAM_PALETTE: [string, string][] = [
-  ["#6366f1", "#4f46e5"], // indigo
-  ["#14b8a6", "#0d9488"], // teal
-  ["#0ea5e9", "#0284c7"], // sky
-  ["#8b5cf6", "#7c3aed"], // violet
-  ["#10b981", "#059669"], // emerald
-  ["#f59e0b", "#d97706"], // amber
-  ["#d946ef", "#c026d3"], // fuchsia
-  ["#06b6d4", "#0891b2"], // cyan
-];
-
-export function carrierMonogramColors(code: string): [string, string] {
-  let hash = 0;
-  for (let i = 0; i < code.length; i++) hash = (hash * 31 + code.charCodeAt(i)) % MONOGRAM_PALETTE.length;
-  return MONOGRAM_PALETTE[Math.abs(hash) % MONOGRAM_PALETTE.length];
 }
 
 export const CARRIER_DISCLAIMER =

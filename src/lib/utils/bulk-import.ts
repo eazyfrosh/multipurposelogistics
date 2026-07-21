@@ -146,8 +146,9 @@ export function parseBulkImportCsv(text: string, userId: string): BulkImportResu
 }
 
 export function downloadBulkImportTemplate() {
+  const exampleCarrierCode = ALL_CARRIERS[0]?.code ?? "GENERIC";
   const sample = [
-    "Jane Doe,jane@example.com,+1 555 000 1111,123 Main St,Austin,United States,73301,John Smith,john@example.com,+1 555 000 2222,45 High St,London,United Kingdom,SW1A 1AA,FEDEX,express,2.5,30,20,15,45.00,2026-08-01,,box,Sample package",
+    `Jane Doe,jane@example.com,+1 555 000 1111,123 Main St,Austin,United States,73301,John Smith,john@example.com,+1 555 000 2222,45 High St,London,United Kingdom,SW1A 1AA,${exampleCarrierCode},express,2.5,30,20,15,45.00,2026-08-01,,box,Sample package`,
   ];
   const csv = [BULK_IMPORT_TEMPLATE_HEADERS.join(","), ...sample].join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });

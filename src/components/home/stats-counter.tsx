@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useInView, motion } from "framer-motion";
+import { CARRIERS } from "@/lib/data/carriers";
 
 function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -31,14 +32,18 @@ function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string
   );
 }
 
-const STATS = [
+const BASE_STATS = [
   { value: 2400000, suffix: "+", label: "Shipments tracked" },
-  { value: 20, suffix: "", label: "Supported carriers" },
   { value: 180, suffix: "+", label: "Countries reached" },
   { value: 99, suffix: "%", label: "On-time visibility" },
 ];
 
 export function StatsCounter() {
+  const stats =
+    CARRIERS.length > 0
+      ? [{ value: CARRIERS.length, suffix: "", label: "Supported carriers" }, ...BASE_STATS]
+      : BASE_STATS;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -46,7 +51,7 @@ export function StatsCounter() {
       transition={{ duration: 0.6, delay: 0.3 }}
       className="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4"
     >
-      {STATS.map((s) => (
+      {stats.map((s) => (
         <div key={s.label} className="text-center sm:text-left">
           <p className="text-2xl font-bold text-white sm:text-3xl">
             <AnimatedNumber value={s.value} suffix={s.suffix} />

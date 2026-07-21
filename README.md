@@ -124,35 +124,53 @@ Firebase mode. Highlights:
 
 ## Carrier logos
 
-Every carrier logo in the app renders through one component and one mapping,
-so swapping in real artwork never requires touching a call site:
+`public/carriers/` is the source of truth for which carriers the app shows
+anywhere — not just their logo image, but whether the carrier appears at all
+in dropdowns, filters, the landing page grid, etc. Only `default.svg` ships
+by default (a neutral generic package icon, used as the fallback); no
+per-carrier logo files are included on purpose — this repo contains no
+third-party trademarks.
 
-- `public/carriers/` — only `default.svg` ships (a neutral generic package
-  icon). No per-carrier logo files are included on purpose — this repo
-  contains no third-party trademarks. Drop your own licensed logo file into
-  this folder using the carrier's expected filename (see the mapping below)
-  and it displays automatically; nothing else changes.
-- `src/lib/data/carrier-logos.ts` — the `carrierLogos` map from carrier code
-  → file path, plus `getCarrierLogoSrc()`.
+How it works:
+
+- `scripts/generate-supported-carriers.mjs` scans `public/carriers/` and
+  writes `src/lib/data/supported-carrier-slugs.generated.ts` (a plain array
+  of filenames present, minus `default.svg`). It runs automatically via
+  `predev`/`prebuild` in `package.json`, so it's always fresh for
+  `npm run dev` and `npm run build` — no manual step.
+- `src/lib/data/carrier-logos.ts` — `carrierLogoSlugs` maps each carrier
+  `code` to its expected filename slug (e.g. `DHL` → `dhl`), and
+  `isCarrierLogoAvailable(code)` checks that slug against the generated
+  list. `GENERIC` (TrackNova Direct) is always available — its logo *is*
+  `default.svg`, which always ships.
+- `src/lib/data/carriers.ts` — `CARRIERS` (the full 20-carrier catalog,
+  filtered to only those with `isCarrierLogoAvailable`) is what every
+  dropdown, filter, and the landing page grid actually renders. Add a logo
+  file with zero code changes and that carrier appears everywhere on the
+  next dev/build; remove the file and it disappears everywhere, with no
+  broken references (the landing page shows a "coming soon" empty state if
+  the list is ever fully empty).
 - `src/components/shared/carrier-logo.tsx` — `<CarrierLogo carrier="DHL" />`.
   Resolves by carrier code or name, renders SVGs as a plain `<img>` and
   raster formats (png/jpg/webp) through `next/image`, falls back to
-  `default.svg` on a missing mapping entry or a failed image load, and is
-  used throughout: the landing page, shipment form, shipment detail/list
-  (dashboard + admin), tracking page, printable documents, and global search.
+  `default.svg` on a failed image load, and is used throughout: the landing
+  page, shipment form, shipment detail/list (dashboard + admin), tracking
+  page, printable documents, dashboard activity, and global search.
 
-To add a new carrier: drop its logo into `public/carriers/`, add one line to
-`carrierLogos`, and add its entry to `CARRIERS` in
-`src/lib/data/carriers.ts` — every screen picks it up automatically.
+To add a new carrier: drop its logo into `public/carriers/` (filename must
+match the slug in `carrierLogoSlugs`), and if it's not one of the 20 already
+defined, add one line to `carrierLogoSlugs` and one entry to the carrier
+catalog in `src/lib/data/carriers.ts`. Nothing else needs to change.
 
 ## Project structure
 
 ```
+scripts/          generate-supported-carriers.mjs (predev/prebuild hook)
 src/
   app/            Next.js App Router routes (marketing, auth, dashboard, admin, track)
   components/     UI components grouped by feature area
   context/        Auth context (Firebase/local-demo)
-  lib/data/       Carrier catalog, tracking-number generator, countries
+  lib/data/       Carrier catalog + logo mapping, tracking-number generator, countries
   lib/services/   Firestore/localStorage data access (shipments, users, notifications, tickets, carriers, activity)
   lib/validation/ Zod schemas
   lib/utils/      CSV/Excel export, CSV bulk-import parser

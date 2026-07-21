@@ -3,15 +3,6 @@ import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 
-const REQUIRED_CLIENT_ENV_VARS = [
-  "NEXT_PUBLIC_FIREBASE_API_KEY",
-  "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
-  "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
-  "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
-  "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
-  "NEXT_PUBLIC_FIREBASE_APP_ID",
-] as const;
-
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -22,8 +13,19 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-const missingClientEnvVars = REQUIRED_CLIENT_ENV_VARS.filter((key) => !process.env[key]);
-const presentClientEnvVarCount = REQUIRED_CLIENT_ENV_VARS.length - missingClientEnvVars.length;
+// Next.js only inlines *static* `process.env.NEXT_PUBLIC_*` member expressions into the
+// client bundle — a dynamic `process.env[key]` loop would silently read `undefined` for
+// every key in the browser (while still working during SSR), causing a server/client
+// mismatch. Each check below must stay a literal, statically-inlinable expression.
+const missingClientEnvVars: string[] = [];
+if (!firebaseConfig.apiKey) missingClientEnvVars.push("NEXT_PUBLIC_FIREBASE_API_KEY");
+if (!firebaseConfig.authDomain) missingClientEnvVars.push("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN");
+if (!firebaseConfig.projectId) missingClientEnvVars.push("NEXT_PUBLIC_FIREBASE_PROJECT_ID");
+if (!firebaseConfig.storageBucket) missingClientEnvVars.push("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET");
+if (!firebaseConfig.messagingSenderId) missingClientEnvVars.push("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID");
+if (!firebaseConfig.appId) missingClientEnvVars.push("NEXT_PUBLIC_FIREBASE_APP_ID");
+
+const presentClientEnvVarCount = 6 - missingClientEnvVars.length;
 
 export const isFirebaseConfigured = missingClientEnvVars.length === 0;
 

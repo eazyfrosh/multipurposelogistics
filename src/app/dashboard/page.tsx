@@ -43,7 +43,7 @@ function DashboardHome() {
       const eventLists = await Promise.all(
         items.map(async (s) => {
           const events = await getTrackingEvents(s.id);
-          return events.map((e) => ({ ...e, trackingNumber: s.trackingNumber }));
+          return events.map((e) => ({ ...e, trackingNumber: s.trackingNumber, carrierCode: s.carrierCode }));
         })
       );
       const merged = eventLists

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { DocumentLayout } from "@/components/shipments/document-layout";
+import { CarrierLogo } from "@/components/shared/carrier-logo";
 import { QRCodeImage } from "@/components/shared/qr-code";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAuth } from "@/context/auth-context";
@@ -40,6 +41,9 @@ function ReceiptContent() {
         </span>
         <h2 className="mt-3 text-xl font-bold">Shipment confirmed</h2>
         <p className="text-sm text-foreground/55">Thank you for shipping with {carrier.name} via TrackNova.</p>
+        <div className="mt-3">
+          <CarrierLogo carrier={shipment.carrierCode} size={40} />
+        </div>
       </div>
 
       <div className="mt-6 flex flex-col items-center gap-3 border-y border-dashed border-black/15 py-6 dark:border-white/20">

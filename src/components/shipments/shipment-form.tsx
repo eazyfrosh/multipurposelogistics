@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { PackagePlus } from "lucide-react";
 import { ContactFields } from "@/components/shipments/contact-fields";
+import { CarrierLogo } from "@/components/shared/carrier-logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/input";
@@ -62,6 +63,7 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
   });
 
   const insured = watch("insured");
+  const selectedCarrier = watch("carrierCode") || ALL_CARRIERS[0].code;
 
   async function onSubmit(values: ShipmentFormValues) {
     if (!user) return;
@@ -142,13 +144,16 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
           <CardContent className="grid gap-4 sm:grid-cols-3">
             <div>
               <Label>Carrier</Label>
-              <Select {...register("carrierCode")}>
-                {ALL_CARRIERS.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.name}
-                  </option>
-                ))}
-              </Select>
+              <div className="flex items-center gap-2">
+                <CarrierLogo carrier={selectedCarrier} size={36} />
+                <Select {...register("carrierCode")} className="flex-1">
+                  {ALL_CARRIERS.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
               <FieldError>{errors.carrierCode?.message}</FieldError>
             </div>
             <div>

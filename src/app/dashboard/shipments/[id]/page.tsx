@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Pencil, Link2, Copy, MapPin, Weight, Ruler, ShieldCheck, FileText } from "lucide-react";
 import { StatusBadge, statusProgressPercent } from "@/components/shared/status-badge";
 import { TrackingTimeline } from "@/components/shared/tracking-timeline";
+import { CarrierLogo } from "@/components/shared/carrier-logo";
 import { QRCodeImage } from "@/components/shared/qr-code";
 import { Barcode } from "@/components/shared/barcode";
 import { Button } from "@/components/ui/button";
@@ -59,8 +60,8 @@ function ShipmentDetail() {
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <carrier.icon size={18} className="text-brand-600 dark:text-brand-400" />
+          <div className="flex items-center gap-2.5">
+            <CarrierLogo carrier={shipment.carrierCode} size={28} />
             <h1 className="text-2xl font-bold">{shipment.trackingNumber}</h1>
             <StatusBadge status={shipment.status} />
           </div>

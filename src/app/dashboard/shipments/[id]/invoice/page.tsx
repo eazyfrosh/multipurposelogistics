@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { DocumentLayout } from "@/components/shipments/document-layout";
+import { CarrierLogo } from "@/components/shared/carrier-logo";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAuth } from "@/context/auth-context";
 import { getShipment } from "@/lib/services/shipments";
@@ -57,8 +58,13 @@ function InvoiceContent() {
         <tbody className="divide-y divide-black/6 dark:divide-white/8">
           <tr>
             <td className="py-3">
-              {carrier.name} — {SERVICE_LABELS[shipment.serviceType]} shipping
-              <p className="text-xs text-foreground/45">Tracking {shipment.trackingNumber}</p>
+              <div className="flex items-center gap-2.5">
+                <CarrierLogo carrier={shipment.carrierCode} size={28} />
+                <div>
+                  {carrier.name} — {SERVICE_LABELS[shipment.serviceType]} shipping
+                  <p className="text-xs text-foreground/45">Tracking {shipment.trackingNumber}</p>
+                </div>
+              </div>
             </td>
             <td className="py-3 text-right">{formatCurrency(shipment.shippingCost)}</td>
           </tr>

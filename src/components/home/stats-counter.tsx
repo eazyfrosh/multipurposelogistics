@@ -33,7 +33,7 @@ function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string
 
 const STATS = [
   { value: 2400000, suffix: "+", label: "Shipments tracked" },
-  { value: 4, suffix: "", label: "Supported carriers" },
+  { value: 20, suffix: "", label: "Supported carriers" },
   { value: 180, suffix: "+", label: "Countries reached" },
   { value: 99, suffix: "%", label: "On-time visibility" },
 ];

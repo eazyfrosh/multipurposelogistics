@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Printer, Copy, MapPin, Weight, Package as PackageIcon } from "lucide-react";
 import { StatusBadge, statusProgressPercent } from "@/components/shared/status-badge";
 import { TrackingTimeline } from "@/components/shared/tracking-timeline";
+import { CarrierLogo } from "@/components/shared/carrier-logo";
 import { RouteMapPlaceholder } from "@/components/tracking/route-map-placeholder";
 import { QRCodeImage } from "@/components/shared/qr-code";
 import { Button } from "@/components/ui/button";
@@ -79,9 +80,7 @@ function TrackingResult() {
       <Card className="mt-6 p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
-              <carrier.icon size={20} />
-            </span>
+            <CarrierLogo carrier={shipment.carrierCode} size={44} />
             <div>
               <p className="text-sm text-foreground/50">{carrier.name} · {SERVICE_LABELS[shipment.serviceType]}</p>
               <StatusBadge status={shipment.status} className="mt-1" />

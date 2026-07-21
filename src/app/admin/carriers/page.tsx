@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CarrierLogo } from "@/components/shared/carrier-logo";
 import { TableRowSkeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/auth-context";
 import { getCarrierSettings, setCarrierActive } from "@/lib/services/carrier-settings";
@@ -55,7 +56,12 @@ export default function AdminCarriersPage() {
             {!loading &&
               carriers.map((c) => (
                 <tr key={c.code} className="border-b border-black/6 last:border-0 dark:border-white/8">
-                  <td className="p-4 font-medium">{c.name}</td>
+                  <td className="p-4 font-medium">
+                    <div className="flex items-center gap-2.5">
+                      <CarrierLogo carrier={c.code} size={26} bare />
+                      {c.name}
+                    </div>
+                  </td>
                   <td className="p-4 font-mono text-xs text-foreground/60">{c.prefix}</td>
                   <td className="p-4 text-foreground/60">{c.serviceTypes.map((s) => SERVICE_LABELS[s]).join(", ")}</td>
                   <td className="p-4">

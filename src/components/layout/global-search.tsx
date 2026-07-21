@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, PackageSearch } from "lucide-react";
+import { Search } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { CarrierLogo } from "@/components/shared/carrier-logo";
 import { useAuth } from "@/context/auth-context";
 import { getAllShipments, getShipmentsByUser } from "@/lib/services/shipments";
 import { getCarrier } from "@/lib/data/carriers";
@@ -93,7 +94,7 @@ export function GlobalSearch() {
               className="flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2.5 text-left text-sm hover:bg-black/5 dark:hover:bg-white/10"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <PackageSearch size={14} className="shrink-0 text-foreground/40" />
+                <CarrierLogo carrier={s.carrierCode} size={26} bare />
                 <div className="min-w-0">
                   <p className="truncate font-medium">{s.trackingNumber}</p>
                   <p className="truncate text-xs text-foreground/50">

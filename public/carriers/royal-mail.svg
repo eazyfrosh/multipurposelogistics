@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 56" role="img" aria-label="RML placeholder logo">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="160" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d946ef"/>
+      <stop offset="1" stop-color="#c026d3"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="56" rx="10" fill="url(#g)"/>
+  <text x="80" y="35" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="22" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="1">RML</text>
+</svg>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Search, Download, FileSpreadsheet, Upload, ListChecks, PackageSearch, ChevronLeft, ChevronRight } from "lucide-react";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { CarrierLogo } from "@/components/shared/carrier-logo";
 import { BulkImportDialog } from "@/components/shipments/bulk-import-dialog";
 import { BulkStatusDialog } from "@/components/shipments/bulk-status-dialog";
 import { Button } from "@/components/ui/button";
@@ -182,7 +183,12 @@ export default function AdminShipmentsPage() {
                     <p className="text-xs text-foreground/45">{s.shipmentNumber}</p>
                   </td>
                   <td className="p-4 text-foreground/65">{s.sender.name} → {s.receiver.name}</td>
-                  <td className="p-4">{getCarrier(s.carrierCode).name}</td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <CarrierLogo carrier={s.carrierCode} size={22} bare />
+                      {getCarrier(s.carrierCode).name}
+                    </div>
+                  </td>
                   <td className="p-4"><StatusBadge status={s.status} /></td>
                   <td className="p-4 text-foreground/65">{formatDateShort(s.estimatedDeliveryDate)}</td>
                   <td className="p-4 text-foreground/65">{formatCurrency(s.shippingCost)}</td>

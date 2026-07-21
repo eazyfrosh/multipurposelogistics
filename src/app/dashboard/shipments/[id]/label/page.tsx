@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { DocumentLayout } from "@/components/shipments/document-layout";
 import { Barcode } from "@/components/shared/barcode";
+import { CarrierLogo } from "@/components/shared/carrier-logo";
 import { QRCodeImage } from "@/components/shared/qr-code";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAuth } from "@/context/auth-context";
@@ -45,8 +46,8 @@ function LabelContent() {
   return (
     <DocumentLayout title="Shipping label">
       <div className="flex items-start justify-between gap-6">
-        <div className="flex items-center gap-2">
-          <carrier.icon size={22} className="text-brand-600 dark:text-brand-400" />
+        <div className="flex items-center gap-3">
+          <CarrierLogo carrier={shipment.carrierCode} size={44} />
           <div>
             <p className="text-lg font-bold">{carrier.name}</p>
             <p className="text-sm text-foreground/55">{SERVICE_LABELS[shipment.serviceType]} service</p>

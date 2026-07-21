@@ -5,8 +5,9 @@ built to look and feel like a production multi-carrier aggregator (ShipStation
 / EasyPost / Shippo / AfterShip-style). **It is a fictional platform and is not
 affiliated with, endorsed by, or connected to DHL, FedEx, UPS, USPS, or any
 other real carrier.** Carrier names are shown only as illustrative "supported
-integrations" using generic icons — never official logos or trademarks — and
-every shipment, tracking event, and notification is simulated.
+integrations" using generic logo-mark placeholders — the repo ships without
+any real carrier's trademarks — and every shipment, tracking event, and
+notification is simulated.
 
 ## Tech stack
 
@@ -119,6 +120,29 @@ Firebase mode. Highlights:
   signed-in user's own shipments, or all shipments for admins.
 - **Extras** — dark/light mode, skeleton loaders, empty states, toast
   notifications, mobile-first responsive layout throughout.
+
+## Carrier logos
+
+Every carrier logo in the app renders through one component and one mapping,
+so swapping in real artwork never requires touching a call site:
+
+- `public/carriers/*.svg` — one file per carrier, plus `default.svg` as the
+  fallback. Ships with generic placeholder marks (a colored monogram chip),
+  **not** any real carrier's logo — this repo intentionally contains no
+  third-party trademarks. Drop your own licensed logo file in to replace a
+  placeholder; same filename, same folder, nothing else changes.
+- `src/lib/data/carrier-logos.ts` — the `carrierLogos` map from carrier code
+  → file path, plus `getCarrierLogoSrc()`.
+- `src/components/shared/carrier-logo.tsx` — `<CarrierLogo carrier="DHL" />`.
+  Resolves by carrier code or name, renders SVGs as a plain `<img>` and
+  raster formats (png/jpg/webp) through `next/image`, falls back to
+  `default.svg` on a missing mapping entry or a failed image load, and is
+  used throughout: the landing page, shipment form, shipment detail/list
+  (dashboard + admin), tracking page, printable documents, and global search.
+
+To add a new carrier: drop its logo into `public/carriers/`, add one line to
+`carrierLogos`, and add its entry to `CARRIERS` in
+`src/lib/data/carriers.ts` — every screen picks it up automatically.
 
 ## Project structure
 

@@ -15,7 +15,7 @@ import { loginSchema, type LoginValues } from "@/lib/validation/auth";
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const { logIn, isDemoMode } = useAuth();
+  const { logIn } = useAuth();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -52,12 +52,6 @@ function LoginForm() {
         </>
       }
     >
-      {isDemoMode && (
-        <div className="mb-4 rounded-lg bg-brand-50 p-3 text-xs text-brand-800 dark:bg-brand-500/10 dark:text-brand-300">
-          Demo mode — no real Firebase project configured. Try the admin account: <br />
-          <code>admin@tracknova.demo</code> / <code>admin123</code>
-        </div>
-      )}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <Label>Email</Label>

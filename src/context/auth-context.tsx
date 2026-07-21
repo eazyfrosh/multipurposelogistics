@@ -18,71 +18,24 @@ import {
   signOut,
   updateProfile as updateFirebaseProfile,
 } from "firebase/auth";
-import { auth, isFirebaseConfigured } from "@/lib/firebase/client";
+import { auth } from "@/lib/firebase/client";
 import { getOne, upsert } from "@/lib/services/store";
 import { logActivity } from "@/lib/services/activity";
 import { defaultNotificationPrefs, type UserProfile } from "@/types";
 
-interface DemoUserRecord {
-  uid: string;
-  email: string;
-  password: string;
-  displayName: string;
-  emailVerified: boolean;
-}
-
-const DEMO_USERS_KEY = "tracknova_demo_users";
-const DEMO_SESSION_KEY = "tracknova_demo_session";
-const DEMO_ADMIN_EMAIL = "admin@tracknova.demo";
-const DEMO_ADMIN_PASSWORD = "admin123";
 const USERS_COLLECTION = "users";
-
-function readDemoUsers(): DemoUserRecord[] {
-  if (typeof window === "undefined") return [];
-  const raw = window.localStorage.getItem(DEMO_USERS_KEY);
-  return raw ? (JSON.parse(raw) as DemoUserRecord[]) : [];
-}
-
-function writeDemoUsers(users: DemoUserRecord[]) {
-  window.localStorage.setItem(DEMO_USERS_KEY, JSON.stringify(users));
-}
-
-async function ensureDemoAdminSeed() {
-  const users = readDemoUsers();
-  if (users.some((u) => u.email === DEMO_ADMIN_EMAIL)) return;
-  const uid = "demo-admin-uid";
-  users.push({
-    uid,
-    email: DEMO_ADMIN_EMAIL,
-    password: DEMO_ADMIN_PASSWORD,
-    displayName: "TrackNova Admin",
-    emailVerified: true,
-  });
-  writeDemoUsers(users);
-  await upsert<UserProfile>(USERS_COLLECTION, {
-    id: uid,
-    uid,
-    email: DEMO_ADMIN_EMAIL,
-    displayName: "TrackNova Admin",
-    role: "admin",
-    createdAt: new Date().toISOString(),
-    notificationPrefs: defaultNotificationPrefs,
-    apiKeys: [],
-    plan: "enterprise",
-  });
-}
+const NOT_CONFIGURED_ERROR =
+  "Firebase is not configured. Set the required NEXT_PUBLIC_FIREBASE_* environment variables — see .env.local.example.";
 
 interface AuthContextValue {
   user: { uid: string; email: string; displayName: string; emailVerified: boolean } | null;
   profile: UserProfile | null;
   loading: boolean;
-  isDemoMode: boolean;
   signUp: (email: string, password: string, displayName: string, company?: string) => Promise<void>;
   logIn: (email: string, password: string) => Promise<void>;
   logOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   sendVerification: () => Promise<void>;
-  markEmailVerifiedDemo: () => void;
   updateUserProfile: (partial: Partial<UserProfile>) => Promise<void>;
 }
 
@@ -107,7 +60,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthContextValue["user"]>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const isDemoMode = !isFirebaseConfigured;
 
   const loadOrCreateProfile = useCallback(
     async (uid: string, email: string, displayName: string) => {
@@ -125,26 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    if (isDemoMode) {
-      ensureDemoAdminSeed().then(() => {
-        const sessionUid = window.localStorage.getItem(DEMO_SESSION_KEY);
-        if (sessionUid) {
-          const found = readDemoUsers().find((u) => u.uid === sessionUid);
-          if (found) {
-            setUser({
-              uid: found.uid,
-              email: found.email,
-              displayName: found.displayName,
-              emailVerified: found.emailVerified,
-            });
-            getOne<UserProfile>(USERS_COLLECTION, found.uid).then((p) => setProfile(p));
-          }
-        }
-        setLoading(false);
-      });
-      return;
-    }
-
     if (!auth) {
       setLoading(false);
       return;
@@ -166,28 +98,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [isDemoMode, loadOrCreateProfile]);
+  }, [loadOrCreateProfile]);
 
   const signUp = useCallback(
     async (rawEmail: string, password: string, displayName: string, company?: string) => {
       const email = rawEmail.trim().toLowerCase();
-      if (isDemoMode) {
-        const users = readDemoUsers();
-        if (users.some((u) => u.email === email)) {
-          throw new Error("An account with this email already exists.");
-        }
-        const uid = `demo-${Date.now()}`;
-        users.push({ uid, email, password, displayName, emailVerified: false });
-        writeDemoUsers(users);
-        const newProfile = makeProfile(uid, email, displayName, company);
-        await upsert(USERS_COLLECTION, newProfile);
-        window.localStorage.setItem(DEMO_SESSION_KEY, uid);
-        setUser({ uid, email, displayName, emailVerified: false });
-        setProfile(newProfile);
-        await logActivity(uid, displayName, "user_created", "user", uid, "Account created");
-        return;
-      }
-      if (!auth) throw new Error("Firebase is not configured.");
+      if (!auth) throw new Error(NOT_CONFIGURED_ERROR);
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       if (displayName) await updateFirebaseProfile(cred.user, { displayName });
       await sendEmailVerification(cred.user);
@@ -196,71 +112,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(created);
       await logActivity(cred.user.uid, displayName, "user_created", "user", cred.user.uid, "Account created");
     },
-    [isDemoMode]
+    []
   );
 
-  const logIn = useCallback(
-    async (rawEmail: string, password: string) => {
-      const email = rawEmail.trim().toLowerCase();
-      if (isDemoMode) {
-        const found = readDemoUsers().find((u) => u.email === email && u.password === password);
-        if (!found) throw new Error("Invalid email or password.");
-        window.localStorage.setItem(DEMO_SESSION_KEY, found.uid);
-        setUser({
-          uid: found.uid,
-          email: found.email,
-          displayName: found.displayName,
-          emailVerified: found.emailVerified,
-        });
-        setProfile(await getOne<UserProfile>(USERS_COLLECTION, found.uid));
-        return;
-      }
-      if (!auth) throw new Error("Firebase is not configured.");
-      await signInWithEmailAndPassword(auth, email, password);
-    },
-    [isDemoMode]
-  );
+  const logIn = useCallback(async (rawEmail: string, password: string) => {
+    const email = rawEmail.trim().toLowerCase();
+    if (!auth) throw new Error(NOT_CONFIGURED_ERROR);
+    await signInWithEmailAndPassword(auth, email, password);
+  }, []);
 
   const logOut = useCallback(async () => {
-    if (isDemoMode) {
-      window.localStorage.removeItem(DEMO_SESSION_KEY);
-      setUser(null);
-      setProfile(null);
-      return;
-    }
     if (auth) await signOut(auth);
-  }, [isDemoMode]);
+  }, []);
 
-  const resetPassword = useCallback(
-    async (rawEmail: string) => {
-      const email = rawEmail.trim().toLowerCase();
-      if (isDemoMode) {
-        if (!readDemoUsers().some((u) => u.email === email)) {
-          throw new Error("No account found with this email.");
-        }
-        return;
-      }
-      if (!auth) throw new Error("Firebase is not configured.");
-      await sendPasswordResetEmail(auth, email);
-    },
-    [isDemoMode]
-  );
+  const resetPassword = useCallback(async (rawEmail: string) => {
+    const email = rawEmail.trim().toLowerCase();
+    if (!auth) throw new Error(NOT_CONFIGURED_ERROR);
+    await sendPasswordResetEmail(auth, email);
+  }, []);
 
   const sendVerification = useCallback(async () => {
-    if (isDemoMode) return;
     if (auth?.currentUser) await sendEmailVerification(auth.currentUser);
-  }, [isDemoMode]);
-
-  const markEmailVerifiedDemo = useCallback(() => {
-    if (!isDemoMode || !user) return;
-    const users = readDemoUsers();
-    const idx = users.findIndex((u) => u.uid === user.uid);
-    if (idx >= 0) {
-      users[idx].emailVerified = true;
-      writeDemoUsers(users);
-      setUser({ ...user, emailVerified: true });
-    }
-  }, [isDemoMode, user]);
+  }, []);
 
   const persistProfile = useCallback(async (nextProfile: UserProfile) => {
     setProfile(nextProfile);
@@ -280,28 +153,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       profile,
       loading,
-      isDemoMode,
       signUp,
       logIn,
       logOut,
       resetPassword,
       sendVerification,
-      markEmailVerifiedDemo,
       updateUserProfile,
     }),
-    [
-      user,
-      profile,
-      loading,
-      isDemoMode,
-      signUp,
-      logIn,
-      logOut,
-      resetPassword,
-      sendVerification,
-      markEmailVerifiedDemo,
-      updateUserProfile,
-    ]
+    [user, profile, loading, signUp, logIn, logOut, resetPassword, sendVerification, updateUserProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -312,5 +171,3 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
-
-export { DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD };

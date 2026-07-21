@@ -6,7 +6,6 @@ import { ThemeProvider } from "@/components/layout/theme-provider";
 import { AuthProvider } from "@/context/auth-context";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { DemoBanner } from "@/components/layout/demo-banner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +38,6 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <div className="no-print">
-              <DemoBanner />
               <Header />
             </div>
             <main className="flex-1">{children}</main>

@@ -14,7 +14,7 @@ tracking event, and notification is simulated.
 
 - Next.js 15 (App Router) + React 19 + TypeScript
 - Tailwind CSS v4
-- Firebase Authentication + Firestore (optional — see below)
+- Firebase Authentication + Firestore + Storage (required — see below)
 - Framer Motion, React Hook Form + Zod, Recharts, `qrcode`, `jsbarcode`, `xlsx`, `sonner`
 
 ## Running locally
@@ -26,20 +26,11 @@ npm run dev
 
 Open http://localhost:3000.
 
-## Demo mode vs. real Firebase
+## Firebase configuration (required)
 
-The app works out of the box with **zero configuration** using a local-demo
-auth mode backed by `localStorage`: sign up, log in, create shipments, and
-manage the whole platform without any Firebase project.
-
-A seeded demo admin account is created automatically in this mode:
-
-- **Email:** `admin@tracknova.demo`
-- **Password:** `admin123`
-
-To use a real Firebase project instead (Authentication + Firestore + Storage),
-copy `.env.local.example` to `.env.local` and fill in your own project's
-values — never commit real credentials:
+There is no local/demo auth mode — every read, write, sign-up, and login goes
+through your own Firebase project. Copy `.env.local.example` to `.env.local`
+and fill in your project's values — never commit real credentials:
 
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=...
@@ -51,16 +42,15 @@ NEXT_PUBLIC_FIREBASE_APP_ID=...
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=...   # optional, Analytics only
 ```
 
-Once all six required `NEXT_PUBLIC_FIREBASE_*` variables are present, the app
-automatically switches to real Firebase Auth + Firestore + Storage (see
+All six required `NEXT_PUBLIC_FIREBASE_*` variables must be present (see
 `src/lib/firebase/client.ts`, which initializes the SDK exactly once via
-`getApps()`). Data reads/writes go through `src/lib/services/store.ts`, a thin
-layer that picks Firestore or `localStorage` depending on whether Firebase is
-configured, so the rest of the app doesn't need to know which backend is
-active. In real-Firebase mode, the first admin user must have their `role`
-field set to `"admin"` directly in the `users` Firestore collection — there's
-no self-serve admin signup (the Firestore rules only ever let a new account
-create itself with `role: "user"`).
+`getApps()`). Data reads/writes go through `src/lib/services/store.ts`, which
+talks to Firestore directly — if Firebase isn't configured, every call throws
+a clear "Firebase is not configured" error rather than silently falling back
+to anything. The first admin user must have their `role` field set to
+`"admin"` directly in the `users` Firestore collection — there's no self-serve
+admin signup (the Firestore rules only ever let a new account create itself
+with `role: "user"`).
 
 If you set some but not all of the required client variables, the app warns
 in the browser console with the exact missing variable name(s) instead of
@@ -112,8 +102,8 @@ Firebase mode. Highlights:
   animated stat counters, a "supported integrations" grid (`<CarrierLogo>` +
   a clear non-affiliation disclaimer), feature grid, "how it works",
   testimonials, and an FAQ accordion.
-- **Auth** — register/login/forgot-password/verify-email (Firebase or
-  simulated in demo mode), protected dashboard/admin routes.
+- **Auth** — register/login/forgot-password/verify-email via Firebase
+  Authentication, protected dashboard/admin routes.
 - **User dashboard** (`/dashboard`) — stat cards (total/delivered/in-transit
   /pending/cancelled/revenue), monthly-shipments bar chart, delivery-status
   donut, carrier-distribution chart, recent activity feed.
@@ -195,9 +185,9 @@ scripts/          generate-supported-carriers.mjs (predev/prebuild hook)
 src/
   app/            Next.js App Router routes (marketing, auth, dashboard, admin, track)
   components/     UI components grouped by feature area
-  context/        Auth context (Firebase/local-demo)
+  context/        Auth context (Firebase Authentication)
   lib/data/       Carrier catalog + logo mapping, tracking-number generator, countries
-  lib/services/   Firestore/localStorage data access (shipments, users, notifications, tickets, carriers, activity)
+  lib/services/   Firestore data access (shipments, users, notifications, tickets, carriers, activity)
   lib/validation/ Zod schemas
   lib/utils/      CSV/Excel export, CSV bulk-import parser
   types/          Shared TypeScript types
@@ -216,5 +206,6 @@ npm run build
 npm run lint
 ```
 
-Deploys cleanly to Vercel with no required environment variables (demo mode is
-the default), and picks up real Firebase config automatically if provided.
+Deploys cleanly to Vercel — set the six required `NEXT_PUBLIC_FIREBASE_*`
+environment variables (see `.env.local.example`) in the Vercel project
+settings before deploying, since there is no fallback mode without them.

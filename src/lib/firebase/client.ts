@@ -25,16 +25,15 @@ if (!firebaseConfig.storageBucket) missingClientEnvVars.push("NEXT_PUBLIC_FIREBA
 if (!firebaseConfig.messagingSenderId) missingClientEnvVars.push("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID");
 if (!firebaseConfig.appId) missingClientEnvVars.push("NEXT_PUBLIC_FIREBASE_APP_ID");
 
-const presentClientEnvVarCount = 6 - missingClientEnvVars.length;
-
 export const isFirebaseConfigured = missingClientEnvVars.length === 0;
 
-// Only warn when configuration looks *attempted but incomplete* — zero vars set is the
-// supported local-demo mode (see AuthProvider's isDemoMode) and shouldn't be flagged.
-if (typeof window !== "undefined" && presentClientEnvVarCount > 0 && missingClientEnvVars.length > 0) {
+// Firebase is required — there is no local/demo fallback. Warn as soon as any var is set
+// so a partial configuration is caught early, since auth/Firestore calls will otherwise
+// throw a less specific "Firebase is not configured" error at first use.
+if (typeof window !== "undefined" && missingClientEnvVars.length > 0) {
   console.warn(
     `[firebase] Incomplete Firebase configuration. Missing environment variable(s): ${missingClientEnvVars.join(", ")}. ` +
-      "Falling back to local demo mode until all required NEXT_PUBLIC_FIREBASE_* variables are set."
+      "Authentication and Firestore calls will fail until all required NEXT_PUBLIC_FIREBASE_* variables are set."
   );
 }
 

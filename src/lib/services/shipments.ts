@@ -1,5 +1,4 @@
 import { getAll, getOne, queryByField, remove, upsert } from "@/lib/services/store";
-import { isFirebaseConfigured } from "@/lib/firebase/client";
 import { generateId, generateVerificationToken } from "@/lib/utils";
 import { generateShipmentNumber, generateTrackingNumber } from "@/lib/data/tracking-number";
 import { logActivity } from "@/lib/services/activity";
@@ -127,36 +126,16 @@ export async function getShipmentsByUser(userId: string) {
   return queryByField<Shipment>(SHIPMENTS, "userId", userId);
 }
 
-export async function findShipment(query: string): Promise<Shipment | null> {
-  const q = query.trim().toUpperCase();
-  if (!q) return null;
-  const all = await getAllShipments();
-  return (
-    all.find(
-      (s) =>
-        s.trackingNumber.toUpperCase() === q ||
-        s.shipmentNumber.toUpperCase() === q ||
-        (s.referenceNumber && s.referenceNumber.toUpperCase() === q)
-    ) ?? null
-  );
-}
-
 /**
- * Public, no-sign-in lookup for the /track search page. In demo mode this
- * scans local shipments directly (no security boundary there). Against real
- * Firestore it only ever reads the narrow, get-by-exact-key lookup mirrors —
- * never the private `shipments` collection — so an anonymous visitor can
- * resolve a tracking/shipment/reference number to an id without ever being
- * able to list or browse other people's shipments.
+ * Public, no-sign-in lookup for the /track search page. Only ever reads the
+ * narrow, get-by-exact-key lookup mirrors — never the private `shipments`
+ * collection — so an anonymous visitor can resolve a tracking/shipment/
+ * reference number to an id without ever being able to list or browse other
+ * people's shipments.
  */
 export async function findShipmentPublic(query: string): Promise<{ id: string } | null> {
   const q = query.trim();
   if (!q) return null;
-
-  if (!isFirebaseConfigured) {
-    const match = await findShipment(q);
-    return match ? { id: match.id } : null;
-  }
 
   const candidates = Array.from(new Set([q, q.toUpperCase()]));
   for (const collection of [TRACKING_LOOKUP, SHIPMENT_LOOKUP, REFERENCE_LOOKUP]) {

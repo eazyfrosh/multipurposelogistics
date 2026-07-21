@@ -27,7 +27,7 @@ const NOTIF_LABELS: Record<keyof NotificationPrefs, string> = {
 };
 
 export default function ProfilePage() {
-  const { user, profile, isDemoMode, resetPassword, updateUserProfile } = useAuth();
+  const { user, profile, resetPassword, updateUserProfile } = useAuth();
   const [saving, setSaving] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
   const [genKeyLabel, setGenKeyLabel] = useState("");
@@ -60,7 +60,7 @@ export default function ProfilePage() {
     setSendingReset(true);
     try {
       await resetPassword(user.email);
-      toast.success(isDemoMode ? "Password reset simulated (demo mode)" : "Password reset email sent");
+      toast.success("Password reset email sent");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send reset email");
     } finally {

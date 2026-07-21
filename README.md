@@ -5,9 +5,10 @@ built to look and feel like a production multi-carrier aggregator (ShipStation
 / EasyPost / Shippo / AfterShip-style). **It is a fictional platform and is not
 affiliated with, endorsed by, or connected to DHL, FedEx, UPS, USPS, or any
 other real carrier.** Carrier names are shown only as illustrative "supported
-integrations" using generic logo-mark placeholders — the repo ships without
-any real carrier's trademarks — and every shipment, tracking event, and
-notification is simulated.
+integrations", rendered through a logo component that falls back to a
+neutral generic icon until real, licensed carrier artwork is supplied — the
+repo ships without any real carrier's trademarks — and every shipment,
+tracking event, and notification is simulated.
 
 ## Tech stack
 
@@ -82,8 +83,8 @@ Firebase mode. Highlights:
 ## Feature overview
 
 - **Landing page** — animated gradient hero with a tracking-number search,
-  animated stat counters, a "supported integrations" grid (generic logo-mark
-  badges + a clear non-affiliation disclaimer), feature grid, "how it works",
+  animated stat counters, a "supported integrations" grid (`<CarrierLogo>` +
+  a clear non-affiliation disclaimer), feature grid, "how it works",
   testimonials, and an FAQ accordion.
 - **Auth** — register/login/forgot-password/verify-email (Firebase or
   simulated in demo mode), protected dashboard/admin routes.
@@ -126,11 +127,11 @@ Firebase mode. Highlights:
 Every carrier logo in the app renders through one component and one mapping,
 so swapping in real artwork never requires touching a call site:
 
-- `public/carriers/*.svg` — one file per carrier, plus `default.svg` as the
-  fallback. Ships with generic placeholder marks (a colored monogram chip),
-  **not** any real carrier's logo — this repo intentionally contains no
-  third-party trademarks. Drop your own licensed logo file in to replace a
-  placeholder; same filename, same folder, nothing else changes.
+- `public/carriers/` — only `default.svg` ships (a neutral generic package
+  icon). No per-carrier logo files are included on purpose — this repo
+  contains no third-party trademarks. Drop your own licensed logo file into
+  this folder using the carrier's expected filename (see the mapping below)
+  and it displays automatically; nothing else changes.
 - `src/lib/data/carrier-logos.ts` — the `carrierLogos` map from carrier code
   → file path, plus `getCarrierLogoSrc()`.
 - `src/components/shared/carrier-logo.tsx` — `<CarrierLogo carrier="DHL" />`.

@@ -121,8 +121,10 @@ export interface PackageInfo {
 export interface ShipmentAttachment {
   id: string;
   name: string;
-  dataUrl: string;
-  kind: "label" | "invoice" | "image";
+  url: string;
+  contentType: string;
+  kind: "image" | "video";
+  sizeBytes: number;
 }
 
 export interface Shipment {

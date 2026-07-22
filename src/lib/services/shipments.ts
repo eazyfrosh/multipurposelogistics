@@ -3,7 +3,15 @@ import { generateId, generateVerificationToken } from "@/lib/utils";
 import { generateShipmentNumber, generateTrackingNumber } from "@/lib/data/tracking-number";
 import { logActivity } from "@/lib/services/activity";
 import { pushNotification } from "@/lib/services/notifications";
-import type { ContactInfo, PackageInfo, ServiceType, Shipment, ShipmentStatus, TrackingEvent } from "@/types";
+import type {
+  ContactInfo,
+  PackageInfo,
+  ServiceType,
+  Shipment,
+  ShipmentAttachment,
+  ShipmentStatus,
+  TrackingEvent,
+} from "@/types";
 
 const SHIPMENTS = "shipments";
 const EVENTS = "tracking_events";
@@ -58,6 +66,7 @@ async function syncPublicMirror(shipment: Shipment) {
 }
 
 export interface CreateShipmentInput {
+  id?: string;
   userId: string;
   carrierCode: string;
   serviceType: ServiceType;
@@ -70,12 +79,13 @@ export interface CreateShipmentInput {
   shippingCost: number;
   insured: boolean;
   insuranceValue?: number;
+  attachments?: ShipmentAttachment[];
 }
 
 export async function createShipment(input: CreateShipmentInput, actorName: string): Promise<Shipment> {
   const now = new Date().toISOString();
   const shipment: Shipment = {
-    id: generateId("shp_"),
+    id: input.id ?? generateId("shp_"),
     shipmentNumber: generateShipmentNumber(),
     trackingNumber: generateTrackingNumber(input.carrierCode),
     referenceNumber: input.referenceNumber,
@@ -90,7 +100,7 @@ export async function createShipment(input: CreateShipmentInput, actorName: stri
     shippingCost: input.shippingCost,
     insured: input.insured,
     insuranceValue: input.insuranceValue,
-    attachments: [],
+    attachments: input.attachments ?? [],
     verificationToken: generateVerificationToken(),
     userId: input.userId,
     createdAt: now,

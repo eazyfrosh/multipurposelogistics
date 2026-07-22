@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { PackagePlus } from "lucide-react";
+import { Film, ImagePlus, Loader2, PackagePlus, X } from "lucide-react";
 import { ContactFields } from "@/components/shipments/contact-fields";
 import { CarrierLogo } from "@/components/shared/carrier-logo";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,16 @@ import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/inpu
 import { useAuth } from "@/context/auth-context";
 import { ALL_CARRIERS } from "@/lib/data/carriers";
 import { createShipment, updateShipment } from "@/lib/services/shipments";
+import {
+  deleteShipmentMedia,
+  isAcceptedMediaFile,
+  isOversizedMediaFile,
+  MAX_MEDIA_FILE_MB,
+  uploadShipmentMedia,
+} from "@/lib/services/media";
+import { generateId, formatFileSize } from "@/lib/utils";
 import { shipmentSchema, type ShipmentFormInput, type ShipmentFormValues } from "@/lib/validation/shipment";
-import { PACKAGE_TYPES, SERVICE_TYPES, SERVICE_LABELS, type Shipment } from "@/types";
+import { PACKAGE_TYPES, SERVICE_TYPES, SERVICE_LABELS, type Shipment, type ShipmentAttachment } from "@/types";
 
 function toDateInput(iso: string) {
   return iso ? iso.slice(0, 10) : "";
@@ -26,6 +34,10 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
   const { user, profile } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const isEdit = Boolean(existing);
+  const [shipmentId] = useState(() => existing?.id ?? generateId("shp_"));
+  const [attachments, setAttachments] = useState<ShipmentAttachment[]>(existing?.attachments ?? []);
+  const [uploadingNames, setUploadingNames] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -65,6 +77,37 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
   const insured = watch("insured");
   const selectedCarrier = watch("carrierCode") || ALL_CARRIERS[0].code;
 
+  async function handleFilesSelected(fileList: FileList | null) {
+    if (!fileList || !user) return;
+    const files = Array.from(fileList);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    for (const file of files) {
+      if (!isAcceptedMediaFile(file)) {
+        toast.error(`${file.name} isn't an image or video file.`);
+        continue;
+      }
+      if (isOversizedMediaFile(file)) {
+        toast.error(`${file.name} is larger than ${MAX_MEDIA_FILE_MB}MB.`);
+        continue;
+      }
+      setUploadingNames((prev) => [...prev, file.name]);
+      try {
+        const attachment = await uploadShipmentMedia(user.uid, shipmentId, file);
+        setAttachments((prev) => [...prev, attachment]);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : `Failed to upload ${file.name}`);
+      } finally {
+        setUploadingNames((prev) => prev.filter((n) => n !== file.name));
+      }
+    }
+  }
+
+  async function handleRemoveAttachment(attachment: ShipmentAttachment) {
+    setAttachments((prev) => prev.filter((a) => a.id !== attachment.id));
+    await deleteShipmentMedia(attachment);
+  }
+
   async function onSubmit(values: ShipmentFormValues) {
     if (!user) return;
     setSubmitting(true);
@@ -91,6 +134,7 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
           shippingCost: values.shippingCost,
           insured: values.insured,
           insuranceValue: values.insured ? values.insuranceValue : undefined,
+          attachments,
         });
         toast.success("Shipment updated");
         router.push(`/dashboard/shipments/${updated.id}`);
@@ -98,6 +142,7 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
       }
       const shipment = await createShipment(
         {
+          id: shipmentId,
           userId: user.uid,
           carrierCode: values.carrierCode,
           serviceType: values.serviceType,
@@ -110,6 +155,7 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
           shippingCost: values.shippingCost,
           insured: values.insured,
           insuranceValue: values.insured ? values.insuranceValue : undefined,
+          attachments,
         },
         profile?.displayName ?? user.email
       );
@@ -234,6 +280,64 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
               <Label>Special instructions (optional)</Label>
               <Textarea rows={3} {...register("specialInstructions")} placeholder="Leave at the front desk, signature required, etc." />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Photos &amp; videos (optional)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                onChange={(e) => handleFilesSelected(e.target.files)}
+                className="w-full text-xs text-foreground/60"
+              />
+              <p className="mt-1 text-xs text-foreground/45">
+                Photos or videos of the package/contents — up to {MAX_MEDIA_FILE_MB}MB each.
+              </p>
+            </div>
+
+            {(attachments.length > 0 || uploadingNames.length > 0) && (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {attachments.map((a) => (
+                  <div key={a.id} className="group relative overflow-hidden rounded-lg border border-black/8 dark:border-white/10">
+                    {a.kind === "image" ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- dynamic user-uploaded Storage URL
+                      <img src={a.url} alt={a.name} className="h-24 w-full object-cover" />
+                    ) : (
+                      <video src={a.url} className="h-24 w-full object-cover" muted />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveAttachment(a)}
+                      aria-label={`Remove ${a.name}`}
+                      className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition group-hover:opacity-100"
+                    >
+                      <X size={12} />
+                    </button>
+                    <div className="flex items-center gap-1 bg-black/50 px-1.5 py-1 text-[10px] text-white">
+                      {a.kind === "video" ? <Film size={10} /> : <ImagePlus size={10} />}
+                      <span className="truncate">{a.name}</span>
+                      <span className="ml-auto shrink-0">{formatFileSize(a.sizeBytes)}</span>
+                    </div>
+                  </div>
+                ))}
+                {uploadingNames.map((name) => (
+                  <div
+                    key={name}
+                    className="flex h-24 flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-black/15 text-foreground/45 dark:border-white/15"
+                  >
+                    <Loader2 size={16} className="animate-spin" />
+                    <span className="max-w-[90%] truncate text-[10px]">{name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

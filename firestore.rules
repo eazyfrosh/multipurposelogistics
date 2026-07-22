@@ -46,10 +46,14 @@ service cloud.firestore {
 
     // Tracking events: readable by anyone who already knows the shipmentId
     // (matches the public tracking page, which shows the same information).
-    // Only admins may add/edit/remove checkpoints.
+    // Creation is also allowed for the shipment's own owner, since creating
+    // a shipment immediately creates its initial "pending" checkpoint as
+    // part of that same user-facing flow — only admins may edit/remove
+    // checkpoints afterward (the tracking-event editor in /admin).
     match /tracking_events/{eventId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create: if isAdmin() || ownsShipment(request.resource.data.shipmentId);
+      allow update, delete: if isAdmin();
     }
 
     // Public mirror of the non-sensitive shipment fields shown on

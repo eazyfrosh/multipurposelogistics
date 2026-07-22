@@ -11,9 +11,13 @@ interface ClientPayload {
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const body = (await request.json()) as HandleUploadBody;
-
+  // Everything — including parsing the request body — is inside this try/catch.
+  // A throw anywhere in this handler must never escape uncaught: an uncaught
+  // exception here is a hard function crash (500 FUNCTION_INVOCATION_FAILED)
+  // rather than a normal error response, which is far harder to diagnose.
   try {
+    const body = (await request.json()) as HandleUploadBody;
+
     const jsonResponse = await handleUpload({
       body,
       request,
@@ -52,11 +56,11 @@ export async function POST(request: Request): Promise<NextResponse> {
           addRandomSuffix: false,
         };
       },
-      onUploadCompleted: async () => {
-        // No server-side bookkeeping needed — the client writes the resulting
-        // blob URL + metadata onto the shipment document in Firestore itself
-        // once the upload() promise resolves.
-      },
+      // No onUploadCompleted: we don't need Vercel Blob to call back after the
+      // upload finishes — the client writes the resulting blob URL + metadata
+      // onto the shipment document in Firestore itself once upload() resolves.
+      // Omitting it also means no callbackUrl is registered on the token, so
+      // Blob's infrastructure never issues that second webhook request at all.
     });
 
     return NextResponse.json(jsonResponse);

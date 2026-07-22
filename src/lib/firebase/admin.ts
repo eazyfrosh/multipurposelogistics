@@ -18,6 +18,29 @@ let adminApp: App | null = null;
  * (Route Handlers, Server Actions). Throws with the exact missing variable names
  * rather than failing silently.
  */
+function resolvePrivateKey(): string {
+  let key = process.env.FIREBASE_PRIVATE_KEY ?? "";
+  // A common paste mistake in Vercel's env var UI: including the surrounding
+  // quote characters as part of the value itself.
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1);
+  }
+  // Env vars can't hold literal newlines — private keys are stored with `\n`
+  // escape sequences and must be converted back before use.
+  key = key.replace(/\\n/g, "\n");
+
+  if (!key.includes("-----BEGIN PRIVATE KEY-----") || !key.includes("-----END PRIVATE KEY-----")) {
+    throw new Error(
+      "FIREBASE_PRIVATE_KEY doesn't look like a valid PEM key (missing BEGIN/END markers) — " +
+        "re-copy the exact \"private_key\" value from the service account JSON, keeping its \\n sequences intact."
+    );
+  }
+  return key;
+}
+
 export function getFirebaseAdminApp(): App {
   if (adminApp) return adminApp;
 
@@ -28,17 +51,21 @@ export function getFirebaseAdminApp(): App {
     );
   }
 
-  adminApp = getApps().length
-    ? getApps()[0]!
-    : initializeApp({
-        credential: cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          // Env vars can't hold literal newlines — private keys are stored with `\n`
-          // escape sequences and must be converted back before use.
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-        }),
-      });
+  try {
+    adminApp = getApps().length
+      ? getApps()[0]!
+      : initializeApp({
+          credential: cert({
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: resolvePrivateKey(),
+          }),
+        });
+  } catch (err) {
+    throw new Error(
+      `Firebase Admin SDK failed to initialize: ${err instanceof Error ? err.message : String(err)}`
+    );
+  }
 
   return adminApp;
 }

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Film, ImagePlus, Loader2, PackagePlus, X } from "lucide-react";
+import { FileText, Film, ImagePlus, PackagePlus, X } from "lucide-react";
 import { ContactFields } from "@/components/shipments/contact-fields";
 import { CarrierLogo } from "@/components/shared/carrier-logo";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
   const isEdit = Boolean(existing);
   const [shipmentId] = useState(() => existing?.id ?? generateId("shp_"));
   const [attachments, setAttachments] = useState<ShipmentAttachment[]>(existing?.attachments ?? []);
-  const [uploadingNames, setUploadingNames] = useState<string[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -84,21 +84,25 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
 
     for (const file of files) {
       if (!isAcceptedMediaFile(file)) {
-        toast.error(`${file.name} isn't an image or video file.`);
+        toast.error(`${file.name} isn't an image, video, or PDF file.`);
         continue;
       }
       if (isOversizedMediaFile(file)) {
         toast.error(`${file.name} is larger than ${MAX_MEDIA_FILE_MB}MB.`);
         continue;
       }
-      setUploadingNames((prev) => [...prev, file.name]);
+      setUploadProgress((prev) => ({ ...prev, [file.name]: 0 }));
       try {
-        const attachment = await uploadShipmentMedia(user.uid, shipmentId, file);
+        const attachment = await uploadShipmentMedia(user.uid, shipmentId, file, (percentage) => {
+          setUploadProgress((prev) => ({ ...prev, [file.name]: percentage }));
+        });
         setAttachments((prev) => [...prev, attachment]);
       } catch (err) {
         toast.error(err instanceof Error ? err.message : `Failed to upload ${file.name}`);
       } finally {
-        setUploadingNames((prev) => prev.filter((n) => n !== file.name));
+        setUploadProgress((prev) =>
+          Object.fromEntries(Object.entries(prev).filter(([name]) => name !== file.name))
+        );
       }
     }
   }
@@ -285,32 +289,36 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Photos &amp; videos (optional)</CardTitle>
+            <CardTitle>Photos, videos &amp; documents (optional)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*,video/*"
+                accept="image/*,video/*,application/pdf"
                 multiple
                 onChange={(e) => handleFilesSelected(e.target.files)}
                 className="w-full text-xs text-foreground/60"
               />
               <p className="mt-1 text-xs text-foreground/45">
-                Photos or videos of the package/contents — up to {MAX_MEDIA_FILE_MB}MB each.
+                Photos, videos, or PDFs of the package/contents — up to {MAX_MEDIA_FILE_MB}MB each.
               </p>
             </div>
 
-            {(attachments.length > 0 || uploadingNames.length > 0) && (
+            {(attachments.length > 0 || Object.keys(uploadProgress).length > 0) && (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {attachments.map((a) => (
                   <div key={a.id} className="group relative overflow-hidden rounded-lg border border-black/8 dark:border-white/10">
-                    {a.kind === "image" ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- dynamic user-uploaded Storage URL
+                    {a.kind === "image" && (
+                      // eslint-disable-next-line @next/next/no-img-element -- dynamic user-uploaded Blob URL
                       <img src={a.url} alt={a.name} className="h-24 w-full object-cover" />
-                    ) : (
-                      <video src={a.url} className="h-24 w-full object-cover" muted />
+                    )}
+                    {a.kind === "video" && <video src={a.url} className="h-24 w-full object-cover" muted />}
+                    {a.kind === "pdf" && (
+                      <div className="flex h-24 w-full items-center justify-center bg-foreground/5">
+                        <FileText size={28} className="text-foreground/40" />
+                      </div>
                     )}
                     <button
                       type="button"
@@ -321,19 +329,24 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
                       <X size={12} />
                     </button>
                     <div className="flex items-center gap-1 bg-black/50 px-1.5 py-1 text-[10px] text-white">
-                      {a.kind === "video" ? <Film size={10} /> : <ImagePlus size={10} />}
+                      {a.kind === "video" && <Film size={10} />}
+                      {a.kind === "image" && <ImagePlus size={10} />}
+                      {a.kind === "pdf" && <FileText size={10} />}
                       <span className="truncate">{a.name}</span>
                       <span className="ml-auto shrink-0">{formatFileSize(a.sizeBytes)}</span>
                     </div>
                   </div>
                 ))}
-                {uploadingNames.map((name) => (
+                {Object.entries(uploadProgress).map(([name, percentage]) => (
                   <div
                     key={name}
-                    className="flex h-24 flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-black/15 text-foreground/45 dark:border-white/15"
+                    className="flex h-24 flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-black/15 px-2 text-foreground/45 dark:border-white/15"
                   >
-                    <Loader2 size={16} className="animate-spin" />
-                    <span className="max-w-[90%] truncate text-[10px]">{name}</span>
+                    <span className="text-xs font-semibold">{Math.round(percentage)}%</span>
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-foreground/10">
+                      <div className="h-full bg-brand-500 transition-all" style={{ width: `${percentage}%` }} />
+                    </div>
+                    <span className="max-w-full truncate text-[10px]">{name}</span>
                   </div>
                 ))}
               </div>

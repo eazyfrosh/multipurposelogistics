@@ -123,7 +123,7 @@ export interface ShipmentAttachment {
   name: string;
   url: string;
   contentType: string;
-  kind: "image" | "video";
+  kind: "image" | "video" | "pdf";
   sizeBytes: number;
 }
 

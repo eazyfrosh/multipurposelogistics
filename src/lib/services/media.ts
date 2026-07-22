@@ -1,12 +1,12 @@
 "use client";
 
-import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { storage } from "@/lib/firebase/client";
+import { upload } from "@vercel/blob/client";
+import { auth } from "@/lib/firebase/client";
 import { generateId } from "@/lib/utils";
 import type { ShipmentAttachment } from "@/types";
 
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
-const ACCEPTED_TYPE_PATTERN = /^(image|video)\//;
+const ACCEPTED_TYPE_PATTERN = /^(image|video)\/|^application\/pdf$/;
 
 export function isAcceptedMediaFile(file: File): boolean {
   return ACCEPTED_TYPE_PATTERN.test(file.type);
@@ -18,42 +18,62 @@ export function isOversizedMediaFile(file: File): boolean {
 
 export const MAX_MEDIA_FILE_MB = MAX_FILE_BYTES / (1024 * 1024);
 
+function kindFromContentType(contentType: string): ShipmentAttachment["kind"] {
+  if (contentType.startsWith("video/")) return "video";
+  if (contentType === "application/pdf") return "pdf";
+  return "image";
+}
+
+async function requireIdToken(): Promise<string> {
+  const token = await auth?.currentUser?.getIdToken();
+  if (!token) {
+    throw new Error("You must be signed in to upload media.");
+  }
+  return token;
+}
+
 export async function uploadShipmentMedia(
   userId: string,
   shipmentId: string,
-  file: File
+  file: File,
+  onProgress?: (percentage: number) => void
 ): Promise<ShipmentAttachment> {
-  if (!storage) {
-    throw new Error(
-      "Firebase is not configured. Set the required NEXT_PUBLIC_FIREBASE_* environment variables — see .env.local.example."
-    );
-  }
   if (!isAcceptedMediaFile(file)) {
-    throw new Error(`${file.name} isn't an image or video file.`);
+    throw new Error(`${file.name} isn't an image, video, or PDF file.`);
   }
   if (isOversizedMediaFile(file)) {
     throw new Error(`${file.name} is larger than ${MAX_MEDIA_FILE_MB}MB.`);
   }
 
+  const idToken = await requireIdToken();
   const id = generateId("med_");
-  const path = `shipment-media/${userId}/${shipmentId}/${id}-${file.name}`;
-  const fileRef = ref(storage, path);
-  await uploadBytes(fileRef, file, { contentType: file.type });
-  const url = await getDownloadURL(fileRef);
+  const pathname = `shipment-media/${userId}/${shipmentId}/${id}-${file.name}`;
+
+  const blob = await upload(pathname, file, {
+    access: "public",
+    handleUploadUrl: "/api/blob/upload",
+    clientPayload: JSON.stringify({ idToken }),
+    contentType: file.type,
+    onUploadProgress: onProgress ? ({ percentage }) => onProgress(percentage) : undefined,
+  });
 
   return {
     id,
     name: file.name,
-    url,
+    url: blob.url,
     contentType: file.type,
-    kind: file.type.startsWith("video/") ? "video" : "image",
+    kind: kindFromContentType(file.type),
     sizeBytes: file.size,
   };
 }
 
 export async function deleteShipmentMedia(attachment: ShipmentAttachment): Promise<void> {
-  if (!storage) return;
-  // A download URL is enough to resolve the underlying storage ref — no need
-  // to separately track the raw path.
-  await deleteObject(ref(storage, attachment.url)).catch(() => {});
+  const idToken = await requireIdToken().catch(() => null);
+  if (!idToken) return;
+
+  await fetch("/api/blob/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify({ url: attachment.url }),
+  }).catch(() => {});
 }

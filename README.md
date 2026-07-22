@@ -14,7 +14,8 @@ tracking event, and notification is simulated.
 
 - Next.js 15 (App Router) + React 19 + TypeScript
 - Tailwind CSS v4
-- Firebase Authentication + Firestore + Storage (required — see below)
+- Firebase Authentication + Firestore (required — see below)
+- Vercel Blob for shipment photo/video/PDF uploads (required — see below)
 - Framer Motion, React Hook Form + Zod, Recharts, `qrcode`, `jsbarcode`, `xlsx`, `sonner`
 
 ## Running locally
@@ -36,13 +37,12 @@ and fill in your project's values — never commit real credentials:
 NEXT_PUBLIC_FIREBASE_API_KEY=...
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
 NEXT_PUBLIC_FIREBASE_APP_ID=...
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=...   # optional, Analytics only
 ```
 
-All six required `NEXT_PUBLIC_FIREBASE_*` variables must be present (see
+All five required `NEXT_PUBLIC_FIREBASE_*` variables must be present (see
 `src/lib/firebase/client.ts`, which initializes the SDK exactly once via
 `getApps()`). Data reads/writes go through `src/lib/services/store.ts`, which
 talks to Firestore directly — if Firebase isn't configured, every call throws
@@ -59,9 +59,10 @@ failing silently or half-configuring itself.
 ### Firebase Admin SDK (server-only)
 
 `src/lib/firebase/admin.ts` provides a lazily-initialized, singleton Admin SDK
-app for any future Route Handler or Server Action that needs server-side
-Firebase access (the app currently has none — everything runs client-side
-against the Client SDK, guarded by Firestore security rules). It reads:
+app for server-side code — currently the two Vercel Blob Route Handlers below,
+which verify each request's Firebase ID token before issuing an upload token
+or deleting a file (everything else in the app runs client-side against the
+Client SDK, guarded by Firestore security rules). It reads:
 
 ```
 FIREBASE_PROJECT_ID=...
@@ -96,6 +97,41 @@ Firebase mode. Highlights:
 - Every other collection (`users`, `notifications`, `support_tickets`,
   `carrier_settings`, `activity_logs`) is scoped to its owner and/or admins.
 
+## Media uploads (Vercel Blob)
+
+Shipment photos/videos/PDFs upload to [Vercel Blob](https://vercel.com/docs/storage/vercel-blob)
+rather than Firebase Storage, so the app works fully on Firebase's free Spark
+plan (Storage requires the pay-as-you-go Blaze plan; Blob is Vercel's own
+product and billed separately, with its own free allowance).
+
+```
+BLOB_READ_WRITE_TOKEN=...   # Vercel dashboard -> Storage -> Create Database -> Blob
+```
+
+On Vercel deployments this is injected automatically once a Blob store is
+connected to the project; it only needs to be set by hand in `.env.local` for
+local development.
+
+Uploads go directly from the browser to Blob (not through a serverless
+function), which is what lets video files up to 50MB work without hitting a
+request body-size limit:
+
+- `src/app/api/blob/upload/route.ts` — implements `@vercel/blob/client`'s
+  `handleUpload`. Before issuing an upload token, it verifies the caller's
+  Firebase ID token (via the Admin SDK) and rejects any requested path that
+  isn't scoped under that verified uid's own `shipment-media/{uid}/...`
+  prefix — a client can never upload into another user's folder even with a
+  valid session.
+- `src/app/api/blob/delete/route.ts` — verifies the ID token the same way,
+  then only allows deleting a blob whose path is under the caller's own
+  prefix (or any path, for an admin).
+- `src/lib/services/media.ts` (client) — calls `upload()` from
+  `@vercel/blob/client` with progress reporting, then the shipment form
+  writes the resulting Blob URL + metadata onto the shipment document's
+  `attachments` array via the normal Firestore `upsert()` path (same
+  `stripUndefined()` write path everything else uses) — Vercel Blob itself
+  stores no metadata beyond the file.
+
 ## Feature overview
 
 - **Landing page** — animated gradient hero with a tracking-number search,
@@ -108,11 +144,12 @@ Firebase mode. Highlights:
   /pending/cancelled/revenue), monthly-shipments bar chart, delivery-status
   donut, carrier-distribution chart, recent activity feed.
 - **Shipment management** (`/dashboard/shipments`) — full create/edit form
-  (sender, receiver, package, service, cost, insurance), auto-generated
-  carrier-prefixed tracking numbers (e.g. `FDX482252259`, `DHL483927492`) and
-  shipment numbers, a detail page with QR code + CODE128 barcode + tracking
-  link, search/filter/pagination, row-selection bulk status update, CSV/Excel
-  export, and CSV bulk import with a downloadable template.
+  (sender, receiver, package, service, cost, insurance, photo/video/PDF
+  attachments via Vercel Blob), auto-generated carrier-prefixed tracking
+  numbers (e.g. `FDX482252259`, `DHL483927492`) and shipment numbers, a
+  detail page with QR code + CODE128 barcode + tracking link + an attachment
+  gallery, search/filter/pagination, row-selection bulk status update,
+  CSV/Excel export, and CSV bulk import with a downloadable template.
 - **Public tracking** (`/track`) — no-sign-in lookup by tracking, reference,
   or shipment number; a result page with current status, progress bar, an
   illustrative checkpoint route visualization (explicitly not live GPS), the
@@ -184,10 +221,11 @@ catalog in `src/lib/data/carriers.ts`. Nothing else needs to change.
 scripts/          generate-supported-carriers.mjs (predev/prebuild hook)
 src/
   app/            Next.js App Router routes (marketing, auth, dashboard, admin, track)
+  app/api/blob/   Route Handlers for Vercel Blob upload/delete (server-only)
   components/     UI components grouped by feature area
   context/        Auth context (Firebase Authentication)
   lib/data/       Carrier catalog + logo mapping, tracking-number generator, countries
-  lib/services/   Firestore data access (shipments, users, notifications, tickets, carriers, activity)
+  lib/services/   Firestore data access (shipments, users, notifications, tickets, carriers, activity) + media.ts (Blob uploads)
   lib/validation/ Zod schemas
   lib/utils/      CSV/Excel export, CSV bulk-import parser
   types/          Shared TypeScript types
@@ -206,6 +244,9 @@ npm run build
 npm run lint
 ```
 
-Deploys cleanly to Vercel — set the six required `NEXT_PUBLIC_FIREBASE_*`
+Deploys cleanly to Vercel — set the five required `NEXT_PUBLIC_FIREBASE_*`
 environment variables (see `.env.local.example`) in the Vercel project
 settings before deploying, since there is no fallback mode without them.
+Connecting a Vercel Blob store to the project (Storage tab) injects
+`BLOB_READ_WRITE_TOKEN` automatically; the three `FIREBASE_*` Admin SDK
+variables need to be added by hand for the upload/delete API routes to work.

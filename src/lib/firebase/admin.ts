@@ -16,7 +16,7 @@ let adminApp: App | null = null;
 /**
  * Lazily initializes (once) and returns the Firebase Admin app for server-only code
  * (Route Handlers, Server Actions). Throws with the exact missing variable names
- * rather than failing silently — there is currently no server code that calls this.
+ * rather than failing silently.
  */
 export function getFirebaseAdminApp(): App {
   if (adminApp) return adminApp;
@@ -49,4 +49,15 @@ export function getAdminAuth(): Auth {
 
 export function getAdminFirestore(): Firestore {
   return getFirestore(getFirebaseAdminApp());
+}
+
+/** Verifies a client-supplied Firebase ID token, returning its decoded claims (including uid). */
+export async function verifyIdToken(idToken: string) {
+  return getAdminAuth().verifyIdToken(idToken);
+}
+
+/** Looks up whether a uid's Firestore profile has the admin role. */
+export async function isAdminUser(uid: string): Promise<boolean> {
+  const snap = await getAdminFirestore().collection("users").doc(uid).get();
+  return snap.exists && snap.data()?.role === "admin";
 }

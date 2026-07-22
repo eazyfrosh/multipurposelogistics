@@ -158,7 +158,7 @@ function ShipmentDetail() {
           {shipment.attachments.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Photos &amp; videos</CardTitle>
+                <CardTitle>Photos, videos &amp; documents</CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {shipment.attachments.map((a) => (
@@ -169,14 +169,20 @@ function ShipmentDetail() {
                     rel="noopener noreferrer"
                     className="group relative overflow-hidden rounded-lg border border-black/8 dark:border-white/10"
                   >
-                    {a.kind === "image" ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- dynamic user-uploaded Storage URL
+                    {a.kind === "image" && (
+                      // eslint-disable-next-line @next/next/no-img-element -- dynamic user-uploaded Blob URL
                       <img src={a.url} alt={a.name} className="h-24 w-full object-cover transition group-hover:opacity-90" />
-                    ) : (
-                      <video src={a.url} className="h-24 w-full object-cover" muted />
+                    )}
+                    {a.kind === "video" && <video src={a.url} className="h-24 w-full object-cover" muted />}
+                    {a.kind === "pdf" && (
+                      <div className="flex h-24 w-full items-center justify-center bg-foreground/5">
+                        <FileText size={28} className="text-foreground/40" />
+                      </div>
                     )}
                     <div className="flex items-center gap-1 bg-black/50 px-1.5 py-1 text-[10px] text-white">
-                      {a.kind === "video" ? <Film size={10} /> : <ImagePlus size={10} />}
+                      {a.kind === "video" && <Film size={10} />}
+                      {a.kind === "image" && <ImagePlus size={10} />}
+                      {a.kind === "pdf" && <FileText size={10} />}
                       <span className="truncate">{a.name}</span>
                     </div>
                   </a>

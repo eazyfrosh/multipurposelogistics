@@ -49,13 +49,22 @@ export async function uploadShipmentMedia(
   const id = generateId("med_");
   const pathname = `shipment-media/${userId}/${shipmentId}/${id}-${file.name}`;
 
-  const blob = await upload(pathname, file, {
-    access: "public",
-    handleUploadUrl: "/api/blob/upload",
-    clientPayload: JSON.stringify({ idToken }),
-    contentType: file.type,
-    onUploadProgress: onProgress ? ({ percentage }) => onProgress(percentage) : undefined,
-  });
+  let blob;
+  try {
+    blob = await upload(pathname, file, {
+      access: "public",
+      handleUploadUrl: "/api/blob/upload",
+      clientPayload: JSON.stringify({ idToken }),
+      contentType: file.type,
+      onUploadProgress: onProgress ? ({ percentage }) => onProgress(percentage) : undefined,
+    });
+  } catch (err) {
+    // @vercel/blob's client only ever throws a generic message here (it doesn't
+    // forward our /api/blob/upload route's actual error text) — the real reason
+    // is only visible in that route's server-side logs, not in this console.
+    console.error("[uploadShipmentMedia] upload() failed — check /api/blob/upload's server logs for the real cause:", err);
+    throw err;
+  }
 
   return {
     id,
@@ -71,9 +80,17 @@ export async function deleteShipmentMedia(attachment: ShipmentAttachment): Promi
   const idToken = await requireIdToken().catch(() => null);
   if (!idToken) return;
 
-  await fetch("/api/blob/delete", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
-    body: JSON.stringify({ url: attachment.url }),
-  }).catch(() => {});
+  try {
+    const res = await fetch("/api/blob/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+      body: JSON.stringify({ url: attachment.url }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      console.error("[deleteShipmentMedia] /api/blob/delete failed:", res.status, body);
+    }
+  } catch (err) {
+    console.error("[deleteShipmentMedia] request failed:", err);
+  }
 }

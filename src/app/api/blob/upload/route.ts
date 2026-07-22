@@ -22,9 +22,22 @@ export async function POST(request: Request): Promise<NextResponse> {
           throw new Error("Missing authentication.");
         }
         const { idToken } = JSON.parse(clientPayload) as ClientPayload;
-        const decoded = await verifyIdToken(idToken).catch(() => null);
-        if (!decoded) {
-          throw new Error("Invalid or expired session — please sign in again.");
+
+        let decoded;
+        try {
+          decoded = await verifyIdToken(idToken);
+        } catch (err) {
+          // Distinguish "server isn't configured to verify tokens at all" (an
+          // Admin SDK / env var problem) from "this token is genuinely bad"
+          // (an expired/invalid session) — the client only ever sees a generic
+          // @vercel/blob error either way, so this is what actually reaches
+          // the server logs.
+          console.error("[api/blob/upload] verifyIdToken failed:", err);
+          throw new Error(
+            err instanceof Error && err.message.startsWith("Firebase Admin SDK is not configured")
+              ? err.message
+              : "Invalid or expired session — please sign in again."
+          );
         }
 
         // The requested path must be scoped under the verified user's own folder —
@@ -48,6 +61,12 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return NextResponse.json(jsonResponse);
   } catch (error) {
+    // @vercel/blob's client-side upload() discards this response body's `error`
+    // field on any non-2xx status and throws its own generic "Failed to retrieve
+    // the client token" instead — so this log line is the only place the real
+    // reason is ever visible. Check the deployment's function logs, not the
+    // browser, when this route fails.
+    console.error("[api/blob/upload] Failed:", error);
     return NextResponse.json({ error: error instanceof Error ? error.message : "Upload failed" }, { status: 400 });
   }
 }

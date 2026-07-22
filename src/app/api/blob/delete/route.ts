@@ -11,8 +11,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Missing authentication." }, { status: 401 });
   }
 
-  const decoded = await verifyIdToken(idToken).catch(() => null);
-  if (!decoded) {
+  let decoded;
+  try {
+    decoded = await verifyIdToken(idToken);
+  } catch (err) {
+    console.error("[api/blob/delete] verifyIdToken failed:", err);
     return NextResponse.json({ error: "Invalid or expired session." }, { status: 401 });
   }
 
@@ -27,6 +30,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "You can only delete your own media." }, { status: 403 });
   }
 
-  await del(url);
+  try {
+    await del(url);
+  } catch (err) {
+    console.error("[api/blob/delete] del() failed:", err);
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Delete failed" }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }

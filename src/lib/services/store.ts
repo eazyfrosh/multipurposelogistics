@@ -21,6 +21,16 @@ function requireDb() {
   return db;
 }
 
+// Firestore rejects literal `undefined` field values outright (unlike the old localStorage
+// path, which silently dropped them via JSON.stringify). Optional fields throughout the app
+// (referenceNumber, specialInstructions, insuranceValue, etc.) are commonly left `undefined`
+// rather than omitted, so every write is sanitized here rather than at each call site.
+// Omitting the key (vs. writing `null`) is also the correct `merge: true` semantics — it
+// leaves any existing value untouched instead of clobbering it.
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
+}
+
 export async function getAll<T extends { id: string }>(collectionName: string): Promise<T[]> {
   const snap = await getDocs(collection(requireDb(), collectionName));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as T);
@@ -38,9 +48,11 @@ export async function upsert<T extends { id: string }>(
   collectionName: string,
   item: T
 ): Promise<void> {
-  await setDoc(doc(requireDb(), collectionName, item.id), item as Record<string, unknown>, {
-    merge: true,
-  });
+  await setDoc(
+    doc(requireDb(), collectionName, item.id),
+    stripUndefined(item as Record<string, unknown>),
+    { merge: true }
+  );
 }
 
 export async function remove(collectionName: string, id: string): Promise<void> {

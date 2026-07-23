@@ -49,6 +49,9 @@ export async function uploadShipmentMedia(
   const id = generateId("med_");
   const pathname = `shipment-media/${userId}/${shipmentId}/${id}-${file.name}`;
 
+  const ts = () => new Date().toISOString();
+  console.log(`[uploadShipmentMedia] ${ts()} calling upload() for ${file.name} (${file.size} bytes)`);
+
   let blob;
   try {
     blob = await upload(pathname, file, {
@@ -56,15 +59,20 @@ export async function uploadShipmentMedia(
       handleUploadUrl: "/api/blob/upload",
       clientPayload: JSON.stringify({ idToken }),
       contentType: file.type,
-      onUploadProgress: onProgress ? ({ percentage }) => onProgress(percentage) : undefined,
+      onUploadProgress: ({ percentage, loaded, total }) => {
+        console.log(`[uploadShipmentMedia] ${ts()} progress for ${file.name}: ${percentage}% (${loaded}/${total})`);
+        onProgress?.(percentage);
+      },
     });
   } catch (err) {
     // @vercel/blob's client only ever throws a generic message here (it doesn't
     // forward our /api/blob/upload route's actual error text) — the real reason
     // is only visible in that route's server-side logs, not in this console.
-    console.error("[uploadShipmentMedia] upload() failed — check /api/blob/upload's server logs for the real cause:", err);
+    console.error(`[uploadShipmentMedia] ${ts()} upload() rejected for ${file.name} — check /api/blob/upload's server logs for the real cause:`, err);
     throw err;
   }
+
+  console.log(`[uploadShipmentMedia] ${ts()} upload() resolved for ${file.name}, url:`, blob.url);
 
   return {
     id,

@@ -92,14 +92,18 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
         continue;
       }
       setUploadProgress((prev) => ({ ...prev, [file.name]: 0 }));
+      console.log(`[shipment-form] ${new Date().toISOString()} starting upload of ${file.name}`);
       try {
         const attachment = await uploadShipmentMedia(user.uid, shipmentId, file, (percentage) => {
           setUploadProgress((prev) => ({ ...prev, [file.name]: percentage }));
         });
+        console.log(`[shipment-form] ${new Date().toISOString()} uploadShipmentMedia() returned for ${file.name}`);
         setAttachments((prev) => [...prev, attachment]);
       } catch (err) {
+        console.error(`[shipment-form] ${new Date().toISOString()} uploadShipmentMedia() threw for ${file.name}:`, err);
         toast.error(err instanceof Error ? err.message : `Failed to upload ${file.name}`);
       } finally {
+        console.log(`[shipment-form] ${new Date().toISOString()} clearing progress state for ${file.name}`);
         setUploadProgress((prev) =>
           Object.fromEntries(Object.entries(prev).filter(([name]) => name !== file.name))
         );

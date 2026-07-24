@@ -1,11 +1,13 @@
 "use client";
 
-import { upload } from "@vercel/blob/client";
 import { auth } from "@/lib/firebase/client";
 import { generateId } from "@/lib/utils";
 import type { ShipmentAttachment } from "@/types";
 
-const MAX_FILE_BYTES = 50 * 1024 * 1024;
+// Must match the cap enforced server-side in /api/blob/upload-proxy/route.ts —
+// that route's body passes through a Vercel Function, which caps it well below
+// what the old direct-to-Blob browser upload allowed.
+const MAX_FILE_BYTES = 4 * 1024 * 1024;
 const ACCEPTED_TYPE_PATTERN = /^(image|video)\/|^application\/pdf$/;
 
 export function isAcceptedMediaFile(file: File): boolean {
@@ -47,41 +49,67 @@ export async function uploadShipmentMedia(
 
   const idToken = await requireIdToken();
   const id = generateId("med_");
-  const pathname = `shipment-media/${userId}/${shipmentId}/${id}-${file.name}`;
+  const pathnameSuffix = `${shipmentId}/${id}-${file.name}`;
 
-  const ts = () => new Date().toISOString();
-  console.log(`[uploadShipmentMedia] ${ts()} calling upload() for ${file.name} (${file.size} bytes)`);
-
-  let blob;
-  try {
-    blob = await upload(pathname, file, {
-      access: "public",
-      handleUploadUrl: "/api/blob/upload",
-      clientPayload: JSON.stringify({ idToken }),
-      contentType: file.type,
-      onUploadProgress: ({ percentage, loaded, total }) => {
-        console.log(`[uploadShipmentMedia] ${ts()} progress for ${file.name}: ${percentage}% (${loaded}/${total})`);
-        onProgress?.(percentage);
-      },
-    });
-  } catch (err) {
-    // @vercel/blob's client only ever throws a generic message here (it doesn't
-    // forward our /api/blob/upload route's actual error text) — the real reason
-    // is only visible in that route's server-side logs, not in this console.
-    console.error(`[uploadShipmentMedia] ${ts()} upload() rejected for ${file.name} — check /api/blob/upload's server logs for the real cause:`, err);
-    throw err;
-  }
-
-  console.log(`[uploadShipmentMedia] ${ts()} upload() resolved for ${file.name}, url:`, blob.url);
+  const url = await uploadViaProxy(file, pathnameSuffix, idToken, onProgress);
 
   return {
     id,
     name: file.name,
-    url: blob.url,
+    url,
     contentType: file.type,
     kind: kindFromContentType(file.type),
     sizeBytes: file.size,
   };
+}
+
+// Uploads through our own same-origin /api/blob/upload-proxy route instead of
+// @vercel/blob/client's upload(), which PUTs directly from the browser to
+// vercel.com — a cross-origin request that's hitting a CORS block on this
+// deployment. Proxying through our own route means the browser never talks to
+// vercel.com directly (no CORS possible), and our server's own call to Vercel
+// Blob is server-to-server (CORS doesn't apply there at all). Uses XHR rather
+// than fetch specifically to get upload progress events for the progress bar.
+function uploadViaProxy(
+  file: File,
+  pathnameSuffix: string,
+  idToken: string,
+  onProgress?: (percentage: number) => void
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("pathnameSuffix", pathnameSuffix);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/blob/upload-proxy");
+    xhr.setRequestHeader("Authorization", `Bearer ${idToken}`);
+
+    xhr.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable) {
+        onProgress?.(Math.round((event.loaded / event.total) * 100));
+      }
+    });
+
+    xhr.onload = () => {
+      let body: { url?: string; error?: string } = {};
+      try {
+        body = JSON.parse(xhr.responseText);
+      } catch {
+        // ignore, handled by the status check below
+      }
+      if (xhr.status >= 200 && xhr.status < 300 && body.url) {
+        onProgress?.(100);
+        resolve(body.url);
+      } else {
+        reject(new Error(body.error || `Failed to upload ${file.name}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error(`Failed to upload ${file.name} — network error.`));
+    xhr.onabort = () => reject(new Error(`Upload of ${file.name} was cancelled.`));
+
+    xhr.send(formData);
+  });
 }
 
 export async function deleteShipmentMedia(attachment: ShipmentAttachment): Promise<void> {

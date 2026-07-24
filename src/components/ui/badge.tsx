@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { HTMLAttributes } from "react";
 
-export type BadgeTone = "brand" | "gold" | "green" | "red" | "amber" | "neutral" | "blue";
+export type BadgeTone = "brand" | "gold" | "green" | "red" | "amber" | "neutral" | "blue" | "carrier";
 type Tone = BadgeTone;
 
 const toneClasses: Record<Tone, string> = {
@@ -12,6 +12,9 @@ const toneClasses: Record<Tone, string> = {
   amber: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
   blue: "bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300",
   neutral: "bg-black/5 text-foreground/70 dark:bg-white/10 dark:text-foreground/70",
+  // Reads --carrier-primary (see CarrierThemeScope) — falls back to the
+  // app's default brand color outside a themed scope.
+  carrier: "bg-[color-mix(in_srgb,var(--carrier-primary)_15%,transparent)] text-[var(--carrier-primary-text)]",
 };
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {

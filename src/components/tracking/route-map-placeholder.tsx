@@ -29,7 +29,7 @@ export function RouteMapPlaceholder({ events }: { events: TrackingEvent[] }) {
 
   return (
     <div>
-      <div className="relative rounded-xl border border-black/8 bg-gradient-to-b from-brand-50/60 to-transparent p-6 dark:border-white/10 dark:from-brand-500/[0.06]">
+      <div className="relative rounded-xl border border-[color-mix(in_srgb,var(--carrier-primary)_16%,transparent)] bg-gradient-to-b from-[color-mix(in_srgb,var(--carrier-primary)_6%,transparent)] to-transparent p-6">
         <div className="bg-grid absolute inset-0 rounded-xl opacity-40" />
         <div className="relative h-28">
           <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2">
@@ -47,13 +47,13 @@ export function RouteMapPlaceholder({ events }: { events: TrackingEvent[] }) {
               style={{ left: `${p.x}%` }}
             >
               {p.isLast && (
-                <span className="absolute h-5 w-5 rounded-full bg-brand-500/30 animate-pulse-ring" />
+                <span className="absolute h-5 w-5 rounded-full bg-[color-mix(in_srgb,var(--carrier-primary)_30%,transparent)] animate-pulse-ring" />
               )}
               <span
                 className={
                   p.isLast
-                    ? "flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg shadow-brand-600/40"
-                    : "flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-brand-400 bg-white dark:bg-[#0b0e17]"
+                    ? "flex h-5 w-5 items-center justify-center rounded-full bg-[var(--carrier-primary)] text-[var(--carrier-on-primary)] shadow-lg shadow-[color-mix(in_srgb,var(--carrier-primary)_40%,transparent)]"
+                    : "flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-[var(--carrier-secondary)] bg-white dark:bg-[#0b0e17]"
                 }
               >
                 {p.isLast && <MapPin size={11} />}

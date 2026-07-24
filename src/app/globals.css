@@ -5,6 +5,20 @@
 :root {
   --background: #f6f7fb;
   --foreground: #0b0f1a;
+
+  /* App-default carrier theme — mirrors src/lib/data/carrier-themes.ts's
+     DEFAULT_CARRIER_THEME. Anything using --carrier-* outside a
+     <CarrierThemeScope> (or wrapping a carrier with no theme entry) renders
+     with these, i.e. identical to the app's normal brand look. */
+  --carrier-primary: #5b5df0;
+  --carrier-secondary: #14b8a6;
+  --carrier-on-primary: #ffffff;
+  --carrier-on-secondary: #ffffff;
+  /* Use for carrier-colored TEXT/icons on the page background (not solid
+     fills, which already pair with --carrier-on-primary for contrast). Equal
+     to --carrier-primary in light mode; lightened in dark mode below so dark
+     carrier colors (e.g. UPS's brown) stay legible against dark surfaces. */
+  --carrier-primary-text: var(--carrier-primary);
 }
 
 .dark {
@@ -82,6 +96,28 @@ body {
 }
 .animate-pulse-ring {
   animation: pulse-ring 1.8s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}
+
+/* Smoothly animates every themed element when --carrier-* changes (e.g.
+   navigating between two shipments from different carriers) instead of the
+   colors snapping instantly. */
+.carrier-theme * {
+  transition-property: background-color, background-image, border-color, color, box-shadow;
+  transition-duration: 500ms;
+  transition-timing-function: ease;
+}
+
+/* --carrier-primary-text must be redeclared here (not just at :root) because
+   custom properties resolve var() using the SAME element's cascade: :root's
+   own --carrier-primary-text would otherwise always reference :root's
+   default --carrier-primary, ignoring CarrierThemeScope's inline override
+   further down the tree. Declaring it again on .carrier-theme itself forces
+   it to resolve against the overridden value actually in effect here. */
+.carrier-theme {
+  --carrier-primary-text: var(--carrier-primary);
+}
+.dark .carrier-theme {
+  --carrier-primary-text: color-mix(in srgb, var(--carrier-primary) 70%, white);
 }
 
 @media print {

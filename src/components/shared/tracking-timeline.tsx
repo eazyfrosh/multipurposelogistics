@@ -8,7 +8,7 @@ import {
   XCircle,
   Undo2,
 } from "lucide-react";
-import { formatDateTime } from "@/lib/utils";
+import { cn, formatDateTime } from "@/lib/utils";
 import type { ShipmentStatus, TrackingEvent } from "@/types";
 
 const STATUS_ICONS: Record<ShipmentStatus, typeof CircleDot> = {
@@ -25,7 +25,14 @@ const STATUS_ICONS: Record<ShipmentStatus, typeof CircleDot> = {
   cancelled: XCircle,
 };
 
-export function TrackingTimeline({ events }: { events: TrackingEvent[] }) {
+export function TrackingTimeline({
+  events,
+  carrierAware = false,
+}: {
+  events: TrackingEvent[];
+  /** Colors the latest checkpoint's dot from the carrier theme (see CarrierThemeScope). */
+  carrierAware?: boolean;
+}) {
   if (events.length === 0) {
     return <p className="py-8 text-center text-sm text-foreground/50">No tracking events yet.</p>;
   }
@@ -40,11 +47,14 @@ export function TrackingTimeline({ events }: { events: TrackingEvent[] }) {
         return (
           <li key={event.id} className="relative">
             <span
-              className={`absolute -left-[31px] flex h-7 w-7 items-center justify-center rounded-full border-2 ${
+              className={cn(
+                "absolute -left-[31px] flex h-7 w-7 items-center justify-center rounded-full border-2",
                 isLatest
-                  ? "border-brand-500 bg-brand-500 text-white shadow-lg shadow-brand-500/30"
+                  ? carrierAware
+                    ? "border-[var(--carrier-primary)] bg-[var(--carrier-primary)] text-[var(--carrier-on-primary)] shadow-lg shadow-[color-mix(in_srgb,var(--carrier-primary)_30%,transparent)]"
+                    : "border-brand-500 bg-brand-500 text-white shadow-lg shadow-brand-500/30"
                   : "border-black/15 bg-white text-foreground/50 dark:border-white/20 dark:bg-[#0b0e17]"
-              }`}
+              )}
             >
               <Icon size={13} />
             </span>

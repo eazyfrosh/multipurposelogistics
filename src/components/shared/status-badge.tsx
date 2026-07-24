@@ -15,9 +15,30 @@ const STATUS_TONES: Record<ShipmentStatus, BadgeTone> = {
   cancelled: "red",
 };
 
-export function StatusBadge({ status, className }: { status: ShipmentStatus; className?: string }) {
+// Statuses that represent the carrier actively handling the shipment — these
+// pick up the carrier's theme color when carrierAware is on. Delivered/
+// failed/returned/cancelled/customs keep their semantic green/red/amber so
+// "good vs. bad outcome" stays instantly recognizable regardless of carrier.
+const CARRIER_TONE_STATUSES = new Set<ShipmentStatus>([
+  "processing",
+  "picked_up",
+  "in_transit",
+  "arrived_at_hub",
+  "out_for_delivery",
+]);
+
+export function StatusBadge({
+  status,
+  className,
+  carrierAware = false,
+}: {
+  status: ShipmentStatus;
+  className?: string;
+  carrierAware?: boolean;
+}) {
+  const tone = carrierAware && CARRIER_TONE_STATUSES.has(status) ? "carrier" : STATUS_TONES[status];
   return (
-    <Badge tone={STATUS_TONES[status]} className={className}>
+    <Badge tone={tone} className={className}>
       {STATUS_LABELS[status]}
     </Badge>
   );

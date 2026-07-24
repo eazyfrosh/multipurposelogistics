@@ -1,7 +1,7 @@
 import { forwardRef, type ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger" | "gold";
+type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger" | "gold" | "carrier" | "carrier-outline";
 type Size = "sm" | "md" | "lg" | "icon";
 
 const variantClasses: Record<Variant, string> = {
@@ -14,6 +14,12 @@ const variantClasses: Record<Variant, string> = {
   ghost: "text-foreground hover:bg-black/5 dark:hover:bg-white/10",
   danger: "bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-600/20",
   gold: "bg-gold-500 text-black hover:bg-gold-400 shadow-lg shadow-gold-500/25 font-semibold",
+  // Reads --carrier-primary/on-primary (see CarrierThemeScope) — falls back
+  // to the app's default brand color outside a themed scope.
+  carrier:
+    "bg-[var(--carrier-primary)] text-[var(--carrier-on-primary)] hover:brightness-110 shadow-lg shadow-[color-mix(in_srgb,var(--carrier-primary)_35%,transparent)]",
+  "carrier-outline":
+    "border border-[color-mix(in_srgb,var(--carrier-primary)_45%,transparent)] text-[var(--carrier-primary-text)] hover:bg-[color-mix(in_srgb,var(--carrier-primary)_10%,transparent)]",
 };
 
 const sizeClasses: Record<Size, string> = {

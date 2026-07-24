@@ -79,6 +79,15 @@ export async function POST(request: Request): Promise<NextResponse> {
           allowedContentTypes: ALLOWED_CONTENT_TYPES,
           maximumSizeInBytes: MAX_FILE_BYTES,
           addRandomSuffix: false,
+          // The pathname already embeds a fresh id per upload, so it's unique on a
+          // first attempt. But @vercel/blob's client retries a PUT up to 10x on any
+          // network-shaped error (including a response the browser couldn't read,
+          // e.g. one blocked by CORS) — and without allowOverwrite, a retry of an
+          // already-succeeded write hits "blob already exists" and 400s. That 400
+          // then *also* looks like a network error to the retry loop, so it keeps
+          // retrying the same guaranteed failure. Since retrying our own successful
+          // write is always safe (same pathname, same bytes), allow it.
+          allowOverwrite: true,
         };
       },
       // No onUploadCompleted: we don't need Vercel Blob to call back after the

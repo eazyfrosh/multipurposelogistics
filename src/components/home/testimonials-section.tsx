@@ -7,19 +7,19 @@ import { Avatar } from "@/components/ui/avatar";
 const TESTIMONIALS = [
   {
     name: "Priya Nair",
-    role: "Operations Lead, demo persona",
+    role: "Operations Lead",
     quote:
       "The tracking timeline is exactly what our support team needed — every checkpoint, timestamped, in one view.",
   },
   {
     name: "Marcus Reyes",
-    role: "Warehouse Manager, demo persona",
+    role: "Warehouse Manager",
     quote:
       "Bulk status updates and CSV export turned a manual afternoon task into a five-minute job.",
   },
   {
     name: "Elena Kovač",
-    role: "Customer Success, demo persona",
+    role: "Customer Success",
     quote:
       "QR verification on every shipment means customers trust the tracking page instead of emailing us to ask 'where's my order?'",
   },
@@ -30,7 +30,7 @@ export function TestimonialsSection() {
     <section className="bg-black/[0.015] py-20 dark:bg-white/[0.015]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Loved by demo teams everywhere</h2>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Loved by teams everywhere</h2>
           <p className="mt-3 text-foreground/60">Illustrative testimonials for this demonstration platform.</p>
         </div>
         <div className="mt-12 grid gap-5 sm:grid-cols-3">

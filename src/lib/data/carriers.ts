@@ -13,7 +13,7 @@ export interface CarrierDefinition {
 }
 
 /**
- * Fictional demo platform: these are shown as "supported carrier integrations"
+ * Fictional platform: these are shown as "supported carrier integrations"
  * with each carrier's logo rendered via <CarrierLogo> — no official logos or
  * trademarks ship in this repo. Real carrier names are referenced solely to
  * illustrate multi-carrier aggregation, in the same spirit as public
@@ -75,4 +75,4 @@ export function getCarrier(identifier: string): CarrierDefinition {
 }
 
 export const CARRIER_DISCLAIMER =
-  "TrackNova is an independent, fictional demo platform built for educational and portfolio purposes. It is not affiliated with, endorsed by, or connected to any of the carriers named above. Carrier names are shown only to illustrate multi-carrier integration; all shipment data, tracking numbers, and events are simulated.";
+  "TrackNova is an independent, fictional platform built for educational and portfolio purposes. It is not affiliated with, endorsed by, or connected to any of the carriers named above. Carrier names are shown only to illustrate multi-carrier integration; all shipment data, tracking numbers, and events are simulated.";

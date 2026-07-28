@@ -10,7 +10,7 @@ export function EmailPreview({ notification, recipientEmail }: { notification: A
       </p>
       <div className="overflow-hidden rounded-2xl border border-black/10 shadow-lg dark:border-white/10">
         <div className="space-y-1 bg-black/[0.03] px-5 py-4 text-xs text-foreground/60 dark:bg-white/5">
-          <p><span className="font-semibold text-foreground/80">From:</span> TrackNova &lt;no-reply@tracknova.demo&gt;</p>
+          <p><span className="font-semibold text-foreground/80">From:</span> TrackNova &lt;no-reply@tracknova.com&gt;</p>
           <p><span className="font-semibold text-foreground/80">To:</span> {recipientEmail}</p>
           <p><span className="font-semibold text-foreground/80">Subject:</span> {notification.title}</p>
         </div>
@@ -30,7 +30,7 @@ export function EmailPreview({ notification, recipientEmail }: { notification: A
           </div>
 
           <div className="border-t border-black/8 bg-black/[0.02] px-6 py-4 text-center text-[11px] text-foreground/40 dark:border-white/10 dark:bg-white/5">
-            TrackNova Demo · This is a portfolio project. No real shipments or emails are involved.
+            TrackNova · This is a portfolio project. No real shipments or emails are involved.
           </div>
         </div>
       </div>

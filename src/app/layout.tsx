@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TrackNova — Multi-Carrier Logistics Platform (Demo)",
+  title: "TrackNova — Multi-Carrier Logistics Platform",
   description:
     "TrackNova is a premium, fictional multi-carrier logistics and shipment tracking platform built for demonstration purposes. Not affiliated with any real carrier.",
 };

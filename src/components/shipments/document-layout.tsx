@@ -32,7 +32,7 @@ export function DocumentLayout({
         </div>
         <div className="mt-6">{children}</div>
         <p className="mt-8 border-t border-black/10 pt-4 text-center text-[11px] text-foreground/40 dark:border-white/10">
-          TrackNova is a fictional demo platform. This document is simulated and holds no legal or shipping value.
+          TrackNova is a fictional platform. This document is simulated and holds no legal or shipping value.
         </p>
       </div>
     </div>

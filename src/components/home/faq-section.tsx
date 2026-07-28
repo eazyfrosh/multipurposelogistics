@@ -7,15 +7,15 @@ import { cn } from "@/lib/utils";
 const FAQS = [
   {
     q: "Is TrackNova connected to real carriers like DHL, FedEx, or UPS?",
-    a: "No. TrackNova is a fictional demo platform. Carrier names are shown as illustrative \"supported integrations\" using generic icons — no real carrier APIs, logos, or trademarks are used, and no real shipments are ever created.",
+    a: "No. TrackNova is a fictional platform. Carrier names are shown as illustrative \"supported integrations\" using generic icons — no real carrier APIs, logos, or trademarks are used, and no real shipments are ever created.",
   },
   {
     q: "How are tracking numbers generated?",
     a: "Each shipment gets a unique tracking number with a prefix matching its selected carrier (e.g. FDX for FedEx-style, DHL for DHL-style), followed by random digits — similar to real-world tracking number formats.",
   },
   {
-    q: "Can I use this without creating a Firebase project?",
-    a: "Yes. TrackNova ships with a local demo mode that stores everything in your browser, including a seeded admin account, so you can explore every feature without any setup.",
+    q: "Do I need an account to use TrackNova?",
+    a: "You can look up any shipment's public tracking page with just a tracking number, no account needed. Creating shipments and using the dashboard or admin panel requires signing up for a free account.",
   },
   {
     q: "What happens when I scan a shipment's QR code?",

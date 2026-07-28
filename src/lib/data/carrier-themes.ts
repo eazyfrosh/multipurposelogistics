@@ -17,7 +17,7 @@ interface CarrierThemeInput {
  * carrier's theme, edit only this map — contrast text and every themed
  * component derive from these two colors automatically (see buildTheme below).
  * Color themes only, no logos/trademarks — matches the rest of the app's
- * "fictional demo platform" carrier branding (see carriers.ts).
+ * "fictional platform" carrier branding (see carriers.ts).
  */
 const THEME_INPUTS: Record<string, CarrierThemeInput> = {
   DHL: { primary: "#FFCC00", secondary: "#D40511" },

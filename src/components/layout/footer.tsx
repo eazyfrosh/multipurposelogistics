@@ -42,7 +42,7 @@ export function Footer() {
               <span className="text-lg tracking-tight">TrackNova</span>
             </Link>
             <p className="mt-3 max-w-xs text-sm text-foreground/55">
-              A premium, multi-carrier shipment tracking &amp; logistics management demo platform.
+              A premium, multi-carrier shipment tracking &amp; logistics management platform.
             </p>
             <div className="mt-4 flex gap-3 text-foreground/40">
               <Globe size={16} />
@@ -69,7 +69,7 @@ export function Footer() {
         <div className="mt-10 border-t border-black/8 pt-6 dark:border-white/10">
           <p className="text-xs leading-relaxed text-foreground/40">{CARRIER_DISCLAIMER}</p>
           <div className="mt-4 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-            <p className="text-xs text-foreground/40">© {new Date().getFullYear()} TrackNova. Demo project — not a real logistics provider.</p>
+            <p className="text-xs text-foreground/40">© {new Date().getFullYear()} TrackNova. Portfolio project — not a real logistics provider.</p>
           </div>
         </div>
       </div>

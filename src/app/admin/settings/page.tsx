@@ -21,11 +21,11 @@ export default function AdminSettingsPage() {
           </div>
           <div>
             <Label>Support email</Label>
-            <Input defaultValue="support@tracknova.demo" disabled />
+            <Input defaultValue="support@tracknova.com" disabled />
           </div>
           <p className="flex items-start gap-1.5 text-xs text-foreground/45">
             <Info size={13} className="mt-0.5 shrink-0" />
-            Branding fields are read-only in this demo — wire them to a settings collection to make them editable.
+            Branding fields are currently read-only — wire them to a settings collection to make them editable.
           </p>
         </CardContent>
       </Card>

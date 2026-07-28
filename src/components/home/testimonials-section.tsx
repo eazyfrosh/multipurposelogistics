@@ -31,7 +31,7 @@ export function TestimonialsSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Loved by teams everywhere</h2>
-          <p className="mt-3 text-foreground/60">Illustrative testimonials for this demonstration platform.</p>
+          <p className="mt-3 text-foreground/60">Illustrative testimonials for this platform.</p>
         </div>
         <div className="mt-12 grid gap-5 sm:grid-cols-3">
           {TESTIMONIALS.map((t, i) => (

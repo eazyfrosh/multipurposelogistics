@@ -105,6 +105,14 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Live chat: one ongoing thread per user, keyed by their own uid. The
+    // user can only ever read/write the doc at their own uid; admins can
+    // read/write any thread (needed for the admin inbox to list and reply
+    // to everyone).
+    match /chats/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
     // Carrier catalog: any signed-in user can view it (used across the
     // shipment form and admin panel); only admins can enable/disable a
     // carrier.

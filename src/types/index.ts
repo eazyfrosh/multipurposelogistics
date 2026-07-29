@@ -209,6 +209,27 @@ export interface SupportTicket {
   updatedAt: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  isAdmin: boolean;
+  text: string;
+  createdAt: string;
+}
+
+// One ongoing thread per user (doc id === userId) rather than discrete
+// tickets — matches a live-chat UX instead of an email-style support queue.
+export interface ChatThread {
+  id: string;
+  userId: string;
+  userName: string;
+  messages: ChatMessage[];
+  updatedAt: string;
+  unreadByAdmin: boolean;
+  unreadByUser: boolean;
+}
+
 export interface CarrierSetting {
   id: string;
   code: string;

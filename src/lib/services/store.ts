@@ -7,6 +7,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   query,
   setDoc,
   where,
@@ -67,4 +68,27 @@ export async function queryByField<T extends { id: string }>(
   const q = query(collection(requireDb(), collectionName), where(field, "==", value));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as T);
+}
+
+// Live (onSnapshot) variants, for the chat widget/inbox — everything else in
+// this module is one-time reads, which is fine for data the user explicitly
+// refreshes, but a chat needs to reflect the other side's messages without
+// a manual reload. Both return an unsubscribe function; call it on unmount.
+export function subscribeOne<T extends { id: string }>(
+  collectionName: string,
+  id: string,
+  callback: (item: T | null) => void
+): () => void {
+  return onSnapshot(doc(requireDb(), collectionName, id), (snap) => {
+    callback(snap.exists() ? ({ id: snap.id, ...snap.data() } as T) : null);
+  });
+}
+
+export function subscribeAll<T extends { id: string }>(
+  collectionName: string,
+  callback: (items: T[]) => void
+): () => void {
+  return onSnapshot(collection(requireDb(), collectionName), (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as T));
+  });
 }

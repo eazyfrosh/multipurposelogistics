@@ -6,7 +6,6 @@ import {
   Search,
   Download,
   FileSpreadsheet,
-  Upload,
   ListChecks,
   PackageSearch,
   ChevronLeft,
@@ -14,7 +13,6 @@ import {
 } from "lucide-react";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { CarrierLogo } from "@/components/shared/carrier-logo";
-import { BulkImportDialog } from "@/components/shipments/bulk-import-dialog";
 import { BulkStatusDialog } from "@/components/shipments/bulk-status-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -40,7 +38,6 @@ function ShipmentsList() {
   const [carrierFilter, setCarrierFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [importOpen, setImportOpen] = useState(false);
   const [bulkStatusOpen, setBulkStatusOpen] = useState(false);
 
   async function reload() {
@@ -123,9 +120,6 @@ function ShipmentsList() {
           <p className="text-sm text-foreground/55">Manage and track all of your shipments.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
-            <Upload size={14} /> Bulk upload
-          </Button>
           <Button variant="outline" size="sm" onClick={() => exportShipmentsCsv(filtered)}>
             <Download size={14} /> CSV
           </Button>
@@ -256,15 +250,6 @@ function ShipmentsList() {
         </div>
       )}
 
-      {user && (
-        <BulkImportDialog
-          open={importOpen}
-          onClose={() => setImportOpen(false)}
-          userId={user.uid}
-          userName={profile?.displayName ?? user.email}
-          onComplete={reload}
-        />
-      )}
       <BulkStatusDialog
         open={bulkStatusOpen}
         onClose={() => setBulkStatusOpen(false)}

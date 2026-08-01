@@ -9,7 +9,6 @@ const COLUMNS = [
       { href: "/track", label: "Track a shipment" },
       { href: "/#features", label: "Features" },
       { href: "/#carriers", label: "Carriers" },
-      { href: "/#pricing", label: "Pricing" },
     ],
   },
   {

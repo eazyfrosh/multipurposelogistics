@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Plus,
   Search,
   Download,
   FileSpreadsheet,
@@ -133,11 +132,6 @@ function ShipmentsList() {
           <Button variant="outline" size="sm" onClick={() => exportShipmentsExcel(filtered)}>
             <FileSpreadsheet size={14} /> Excel
           </Button>
-          <Link href="/dashboard/shipments/new">
-            <Button size="sm">
-              <Plus size={14} /> New shipment
-            </Button>
-          </Link>
         </div>
       </div>
 
@@ -241,14 +235,7 @@ function ShipmentsList() {
           <EmptyState
             icon={<PackageSearch size={22} />}
             title="No shipments found"
-            description="Try adjusting your filters, or create your first shipment."
-            action={
-              <Link href="/dashboard/shipments/new">
-                <Button size="sm">
-                  <Plus size={14} /> New shipment
-                </Button>
-              </Link>
-            }
+            description="Try adjusting your filters. New shipments are created by our team — reach out via support if you need one added."
           />
         )}
       </Card>

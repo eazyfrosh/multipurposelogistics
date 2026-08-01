@@ -29,7 +29,7 @@ function toDateInput(iso: string) {
   return iso ? iso.slice(0, 10) : "";
 }
 
-export function ShipmentForm({ existing }: { existing?: Shipment }) {
+export function ShipmentForm({ existing, redirectBase = "/dashboard/shipments" }: { existing?: Shipment; redirectBase?: string }) {
   const router = useRouter();
   const { user, profile } = useAuth();
   const [submitting, setSubmitting] = useState(false);
@@ -168,7 +168,7 @@ export function ShipmentForm({ existing }: { existing?: Shipment }) {
         profile?.displayName ?? user.email
       );
       toast.success(`Shipment ${shipment.trackingNumber} created`);
-      router.push(`/dashboard/shipments/${shipment.id}`);
+      router.push(`${redirectBase}/${shipment.id}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save shipment");
     } finally {

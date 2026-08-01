@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Search, Download, FileSpreadsheet, Upload, ListChecks, PackageSearch, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Download, FileSpreadsheet, Upload, ListChecks, PackageSearch, ChevronLeft, ChevronRight } from "lucide-react";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { CarrierLogo } from "@/components/shared/carrier-logo";
 import { BulkImportDialog } from "@/components/shipments/bulk-import-dialog";
@@ -103,6 +103,11 @@ export default function AdminShipmentsPage() {
           <Button variant="outline" size="sm" onClick={() => exportShipmentsExcel(filtered)}>
             <FileSpreadsheet size={14} /> Excel
           </Button>
+          <Link href="/admin/shipments/new">
+            <Button size="sm">
+              <Plus size={14} /> New shipment
+            </Button>
+          </Link>
         </div>
       </div>
 

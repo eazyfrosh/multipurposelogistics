@@ -9,7 +9,6 @@ import {
   Clock,
   XCircle,
   DollarSign,
-  Plus,
   PackageSearch,
 } from "lucide-react";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -112,11 +111,6 @@ function DashboardHome() {
               <PackageSearch size={14} /> Track a shipment
             </Button>
           </Link>
-          <Link href="/dashboard/shipments/new">
-            <Button size="sm">
-              <Plus size={14} /> New shipment
-            </Button>
-          </Link>
         </div>
       </div>
 
@@ -140,14 +134,7 @@ function DashboardHome() {
           className="mt-8"
           icon={<Package size={22} />}
           title="No shipments yet"
-          description="Create your first shipment to see analytics and activity here."
-          action={
-            <Link href="/dashboard/shipments/new">
-              <Button size="sm">
-                <Plus size={14} /> Create a shipment
-              </Button>
-            </Link>
-          }
+          description="Once a shipment is created for your account, its analytics and activity will show up here."
         />
       ) : (
         <>

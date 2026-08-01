@@ -9,7 +9,7 @@ const COLUMNS = [
       { href: "/track", label: "Track a shipment" },
       { href: "/#features", label: "Features" },
       { href: "/#carriers", label: "Carriers" },
-      { href: "/#faq", label: "FAQ" },
+      { href: "/#pricing", label: "Pricing" },
     ],
   },
   {
@@ -23,7 +23,7 @@ const COLUMNS = [
   {
     title: "Company",
     links: [
-      { href: "/#faq", label: "Support" },
+      { href: "/dashboard/support", label: "Support" },
       { href: "/track", label: "Shipment lookup" },
     ],
   },

@@ -18,7 +18,7 @@ const NAV_LINKS = [
   { href: "/track", label: "Track Shipment" },
   { href: "/#carriers", label: "Carriers" },
   { href: "/#features", label: "Features" },
-  { href: "/#faq", label: "FAQ" },
+  { href: "/#pricing", label: "Pricing" },
 ];
 
 export function Header() {

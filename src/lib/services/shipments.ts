@@ -21,9 +21,10 @@ const SHIPMENT_LOOKUP = "shipment_lookup";
 const REFERENCE_LOOKUP = "reference_lookup";
 
 /**
- * The public-safe subset of a shipment, mirrored into a separate collection
- * so /track/[id] never needs read access to the private `shipments`
- * collection (which holds full sender/receiver emails, phones, addresses).
+ * The subset of a shipment shown on the public /track/[id] page, mirrored
+ * into a separate collection so that page never needs read access to the
+ * private `shipments` collection (which additionally holds phone numbers
+ * and full street addresses — those still aren't exposed here).
  */
 export interface PublicShipmentSummary {
   id: string;
@@ -35,8 +36,8 @@ export interface PublicShipmentSummary {
   serviceType: ServiceType;
   estimatedDeliveryDate: string;
   weightKg: number;
-  sender: { name: string; city: string; country: string };
-  receiver: { name: string; city: string; country: string };
+  sender: { name: string; email: string; city: string; country: string };
+  receiver: { name: string; email: string; city: string; country: string };
 }
 
 function toPublicSummary(s: Shipment): PublicShipmentSummary {
@@ -50,8 +51,8 @@ function toPublicSummary(s: Shipment): PublicShipmentSummary {
     serviceType: s.serviceType,
     estimatedDeliveryDate: s.estimatedDeliveryDate,
     weightKg: s.package.weightKg,
-    sender: { name: s.sender.name, city: s.sender.city, country: s.sender.country },
-    receiver: { name: s.receiver.name, city: s.receiver.city, country: s.receiver.country },
+    sender: { name: s.sender.name, email: s.sender.email, city: s.sender.city, country: s.sender.country },
+    receiver: { name: s.receiver.name, email: s.receiver.email, city: s.receiver.city, country: s.receiver.country },
   };
 }
 

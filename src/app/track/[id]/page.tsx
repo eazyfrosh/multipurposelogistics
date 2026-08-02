@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Printer, Copy, MapPin, Weight, Package as PackageIcon } from "lucide-react";
+import { Printer, Copy, Mail, MapPin, Weight, Package as PackageIcon } from "lucide-react";
 import { StatusBadge, statusProgressPercent } from "@/components/shared/status-badge";
 import { TrackingTimeline } from "@/components/shared/tracking-timeline";
 import { CarrierLogo } from "@/components/shared/carrier-logo";
@@ -140,11 +140,21 @@ function TrackingResult() {
               <div>
                 <p className="text-xs uppercase tracking-wide text-foreground/40">Sender</p>
                 <p className="font-medium">{shipment.sender.name}</p>
+                {shipment.sender.email && (
+                  <p className="flex items-center gap-1 text-xs text-foreground/50">
+                    <Mail size={11} /> {shipment.sender.email}
+                  </p>
+                )}
                 <p className="text-foreground/55">{shipment.sender.city}, {shipment.sender.country}</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wide text-foreground/40">Receiver</p>
                 <p className="font-medium">{shipment.receiver.name}</p>
+                {shipment.receiver.email && (
+                  <p className="flex items-center gap-1 text-xs text-foreground/50">
+                    <Mail size={11} /> {shipment.receiver.email}
+                  </p>
+                )}
                 <p className="text-foreground/55">{shipment.receiver.city}, {shipment.receiver.country}</p>
               </div>
               <div className="flex items-center gap-1.5 pt-1">

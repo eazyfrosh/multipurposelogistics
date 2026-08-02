@@ -55,7 +55,19 @@ function TrackingResult() {
   const latestEvent = [...events].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
 
   return (
-    <CarrierThemeScope carrierCode={carrier.code} className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    <CarrierThemeScope carrierCode={carrier.code} className="relative mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+      {/* Ambient glow: extends the hero header's carrier gradient softly into
+          the page background instead of it just stopping at the card edge.
+          Fixed + behind everything + no-print so it never affects layout,
+          scroll performance, or the printed invoice/PDF. */}
+      <div
+        aria-hidden
+        className="no-print pointer-events-none fixed inset-0 -z-10 opacity-[0.15] blur-3xl dark:opacity-[0.22]"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse 60% 45% at 20% 0%, var(--carrier-primary), transparent 70%), radial-gradient(ellipse 55% 40% at 100% 25%, var(--carrier-secondary), transparent 70%)",
+        }}
+      />
       <div className="flex flex-wrap items-start justify-between gap-4 no-print">
         <div>
           <p className="text-sm text-foreground/50">Tracking number</p>

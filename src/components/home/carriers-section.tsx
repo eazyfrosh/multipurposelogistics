@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Truck } from "lucide-react";
 import { CarrierLogo } from "@/components/shared/carrier-logo";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CARRIERS, CARRIER_DISCLAIMER } from "@/lib/data/carriers";
+import { CARRIERS } from "@/lib/data/carriers";
 
 export function CarriersSection() {
   return (
@@ -43,10 +43,6 @@ export function CarriersSection() {
           ))}
         </div>
       )}
-
-      <p className="mx-auto mt-8 max-w-3xl text-center text-xs leading-relaxed text-foreground/40">
-        {CARRIER_DISCLAIMER}
-      </p>
     </section>
   );
 }

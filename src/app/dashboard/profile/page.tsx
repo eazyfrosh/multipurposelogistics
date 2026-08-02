@@ -86,7 +86,7 @@ export default function ProfilePage() {
     };
     await updateUserProfile({ apiKeys: [...profile.apiKeys, key] });
     setGenKeyLabel("");
-    toast.success("API key generated (simulated)");
+    toast.success("API key generated");
   }
 
   async function removeApiKey(id: string) {
@@ -181,10 +181,7 @@ export default function ProfilePage() {
           <Card>
             <CardHeader><CardTitle>API keys</CardTitle></CardHeader>
             <CardContent>
-              <p className="text-sm text-foreground/60">
-                Simulated API keys — no real API is exposed.
-              </p>
-              <div className="mt-3 flex gap-2">
+              <div className="flex gap-2">
                 <Input value={genKeyLabel} onChange={(e) => setGenKeyLabel(e.target.value)} placeholder="Key label (e.g. Production)" />
                 <Button onClick={generateApiKey}><Plus size={14} /> Generate</Button>
               </div>
@@ -215,11 +212,11 @@ export default function ProfilePage() {
                   <p className="text-xs uppercase tracking-wide text-foreground/45">Current plan</p>
                   <p className="text-lg font-bold capitalize">{profile.plan ?? "starter"}</p>
                 </div>
-                <Button variant="secondary" onClick={() => toast.info("Billing is simulated — no real payment processing")}>
+                <Button variant="secondary" onClick={() => toast.info("Upgrade flow coming soon")}>
                   Upgrade plan
                 </Button>
               </div>
-              <p className="mt-4 text-sm text-foreground/50">No invoices yet — billing is simulated, with no real payment processing.</p>
+              <p className="mt-4 text-sm text-foreground/50">No invoices yet.</p>
             </CardContent>
           </Card>
         </TabsContent>

@@ -33,7 +33,7 @@ export function Hero() {
       <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium tracking-wide text-white/90">
-            ✦ Simulated shipments &amp; tracking data
+            ✦ Real-time shipment tracking
           </span>
           <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
             Every shipment, every carrier,

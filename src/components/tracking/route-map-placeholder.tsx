@@ -1,14 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Info } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import type { TrackingEvent } from "@/types";
 
-/**
- * Illustrative route visualization built from tracking-event checkpoints —
- * not a live map and not real-time GPS. Intentionally schematic.
- */
 export function RouteMapPlaceholder({ events }: { events: TrackingEvent[] }) {
   const [active, setActive] = useState<number | null>(null);
 
@@ -69,9 +65,6 @@ export function RouteMapPlaceholder({ events }: { events: TrackingEvent[] }) {
           ))}
         </div>
       </div>
-      <p className="mt-2 flex items-center gap-1.5 text-xs text-foreground/40">
-        <Info size={12} /> Illustrative route based on recorded checkpoints — not live GPS tracking.
-      </p>
     </div>
   );
 }

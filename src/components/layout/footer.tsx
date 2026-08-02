@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Boxes, Globe, Mail, Share2 } from "lucide-react";
-import { CARRIER_DISCLAIMER } from "@/lib/data/carriers";
 
 const COLUMNS = [
   {
@@ -66,10 +65,7 @@ export function Footer() {
         </div>
 
         <div className="mt-10 border-t border-black/8 pt-6 dark:border-white/10">
-          <p className="text-xs leading-relaxed text-foreground/40">{CARRIER_DISCLAIMER}</p>
-          <div className="mt-4 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-            <p className="text-xs text-foreground/40">© {new Date().getFullYear()} TrackNova. Portfolio project — not a real logistics provider.</p>
-          </div>
+          <p className="text-xs text-foreground/40">© {new Date().getFullYear()} TrackNova. All rights reserved.</p>
         </div>
       </div>
     </footer>

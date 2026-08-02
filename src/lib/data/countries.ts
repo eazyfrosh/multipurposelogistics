@@ -22,6 +22,7 @@ export const COUNTRIES = [
   "Singapore",
   "United Arab Emirates",
   "Saudi Arabia",
+  "Syria",
   "South Africa",
   "Nigeria",
   "Kenya",

@@ -30,7 +30,11 @@ function EditShipmentInner() {
 
   if (!shipment) return <LoadingState label="Loading shipment…" />;
 
-  return <ShipmentForm existing={shipment} />;
+  // Own shipment stays in the customer-facing dashboard; an admin editing
+  // someone else's shipment lands back in the admin section after saving.
+  const redirectBase = shipment.userId === user?.uid ? "/dashboard/shipments" : "/admin/shipments";
+
+  return <ShipmentForm existing={shipment} redirectBase={redirectBase} />;
 }
 
 export default function EditShipmentPage() {

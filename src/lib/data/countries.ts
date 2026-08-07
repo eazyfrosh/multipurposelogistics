@@ -7,6 +7,7 @@ export const COUNTRIES = [
   "Spain",
   "Italy",
   "Netherlands",
+  "Austria",
   "Switzerland",
   "Sweden",
   "Norway",

@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CheckCircle2, ImagePlus, PlusCircle, CalendarClock } from "lucide-react";
+import { CheckCircle2, ImagePlus, PlusCircle, CalendarClock, Pencil } from "lucide-react";
 import { StatusBadge, statusProgressPercent } from "@/components/shared/status-badge";
 import { TrackingTimeline } from "@/components/shared/tracking-timeline";
 import { CarrierLogo } from "@/components/shared/carrier-logo";
@@ -171,6 +171,9 @@ function AdminShipmentEditor() {
           <p className="mt-1 text-sm text-foreground/55">{shipment.shipmentNumber} · {carrier.name}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/shipments/${shipment.id}/edit`)}>
+            <Pencil size={14} /> Edit shipment
+          </Button>
           <Button variant="outline" size="sm" onClick={() => router.push(`/track/${shipment.id}`)}>
             View public page
           </Button>

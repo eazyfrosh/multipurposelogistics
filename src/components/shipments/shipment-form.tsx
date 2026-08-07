@@ -145,7 +145,7 @@ export function ShipmentForm({ existing, redirectBase = "/dashboard/shipments" }
           attachments,
         });
         toast.success("Shipment updated");
-        router.push(`/dashboard/shipments/${updated.id}`);
+        router.push(`${redirectBase}/${updated.id}`);
         return;
       }
       const shipment = await createShipment(

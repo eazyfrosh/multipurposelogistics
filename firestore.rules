@@ -56,10 +56,10 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // Public mirror of the fields shown on /track/[id] — name/email/city/
-    // country, never phone or full street address. Keyed by the same id as
-    // the shipment; get-only, never listable, so it can't be scanned.
-    // Written only by the app's own create/update flow.
+    // Public mirror of the non-sensitive shipment fields shown on
+    // /track/[id] — name/city/country only, never email/phone/full address.
+    // Keyed by the same id as the shipment; get-only, never listable, so it
+    // can't be scanned. Written only by the app's own create/update flow.
     match /shipment_tracking/{shipmentId} {
       allow get: if true;
       allow list: if false;
